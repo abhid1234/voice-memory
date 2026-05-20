@@ -319,3 +319,35 @@ h1 {
   padding-top: 2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+.debug-status {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 1rem;
+  font-family: monospace;
+}
+
+.transcription-preview {
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+  color: #eee;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.voice-controls {
+  margin: 2rem 0;
+}
+
+.record-btn.secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ccc;
+  box-shadow: none;
+}

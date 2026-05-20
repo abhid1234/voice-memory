@@ -1,10 +1,33 @@
 import { useState } from 'react'
 import { inference } from '../lib/inference'
-import syntheticData from '../../../public-demo/synthetic_memory.json'
+import syntheticData from '../data/synthetic_memory.json'
+import { stt } from '../lib/stt'
 
 function Demo() {
   const [answer, setAnswer] = useState('')
   const [isThinking, setIsThinking] = useState(false)
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [status, setStatus] = useState('');
+
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      await stt.stop();
+      setIsRecording(false);
+    } else {
+      setTranscription('');
+      setStatus('Starting...');
+      setIsRecording(true);
+      try {
+        await stt.start((result) => {
+          setTranscription(result.text);
+        }, (s) => setStatus(s));
+      } catch (err) {
+        setStatus(`Error: ${err}`);
+        setIsRecording(false);
+      }
+    }
+  };
 
   const sampleQuestions = [
     "What did Sam say about model scaling?",
@@ -19,11 +42,11 @@ function Demo() {
     try {
       // For the demo, we override the retrieval to use synthetic data
       const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-      const relevant = syntheticData.filter(m => 
-        queryTerms.some(t => m.transcript.toLowerCase().includes(t))
+      const relevant = syntheticData.filter((m: any) => 
+        queryTerms.some((t: string) => m.transcript.toLowerCase().includes(t))
       );
       
-      const context = relevant.map((m, i) => `[${i+1}] ${m.transcript}`).join('\n\n');
+      const context = relevant.map((m: any, i: number) => `[${i+1}] ${m.transcript}`).join('\n\n');
       
       setAnswer('Thinking (on-device)...')
       const aiResponse = await inference.generateResponse(query, context);
@@ -59,6 +82,12 @@ function Demo() {
       </div>
 
       <div className="answer-area">
+        {status && <div className="debug-status">Status: {status}</div>}
+        {transcription && (
+          <div className="transcription-preview">
+            <strong>Transcribed:</strong> {transcription}
+          </div>
+        )}
         {answer && (
           <div className="ai-response">
             <p>{answer}</p>
@@ -66,8 +95,17 @@ function Demo() {
         )}
       </div>
 
+      <div className="voice-controls">
+        <button 
+          className={`record-btn ${isRecording ? 'recording' : ''}`}
+          onClick={handleToggleRecording}
+        >
+          {isRecording ? '⏹ Stop Recording' : '🎤 Start Voice Query'}
+        </button>
+      </div>
+
       <div className="install-prompt">
-        <button className="record-btn" style={{fontSize: '1rem', padding: '1rem 2rem'}}>
+        <button className="record-btn secondary" style={{fontSize: '1rem', padding: '1rem 2rem'}}>
           Install for yourself
         </button>
         <p className="status-text">Only the full app requires mic permissions.</p>
