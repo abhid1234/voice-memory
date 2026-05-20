@@ -17,8 +17,10 @@ interface Pending {
 export class WorkerClient {
   private nextId = 1
   private pending = new Map<number, Pending>()
+  private worker: WorkerLike
 
-  constructor(private worker: WorkerLike) {
+  constructor(worker: WorkerLike) {
+    this.worker = worker
     this.worker.onmessage = (ev) => this.dispatch(ev.data)
   }
 
@@ -37,21 +39,20 @@ export class WorkerClient {
     p.resolve(res)
   }
 
-  private request(req: Omit<WorkerRequest, 'id'>, onProgress?: ProgressFn): Promise<ResultMessage> {
-    const id = this.nextId++
+  private request(req: WorkerRequest, onProgress?: ProgressFn): Promise<ResultMessage> {
     return new Promise<ResultMessage>((resolve, reject) => {
-      this.pending.set(id, { resolve, reject, onProgress })
-      this.worker.postMessage({ ...req, id } as WorkerRequest)
+      this.pending.set(req.id, { resolve, reject, onProgress })
+      this.worker.postMessage(req)
     })
   }
 
   async transcribe(audio: Float32Array, onProgress?: ProgressFn): Promise<string> {
-    const res = await this.request({ type: 'TRANSCRIBE', audio }, onProgress)
+    const res = await this.request({ id: this.nextId++, type: 'TRANSCRIBE', audio }, onProgress)
     return res.text ?? ''
   }
 
   async embed(text: string, onProgress?: ProgressFn): Promise<Float32Array> {
-    const res = await this.request({ type: 'EMBED', text }, onProgress)
+    const res = await this.request({ id: this.nextId++, type: 'EMBED', text }, onProgress)
     return res.vector ?? new Float32Array()
   }
 }
