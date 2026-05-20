@@ -1,0 +1,27 @@
+[
+  {
+    "id": "s1",
+    "timestamp": 1716150000000,
+    "transcript": "Sam mentioned that model scaling laws are still holding up for the next generation of dense models, but we need to watch the compute efficiency on the H100s."
+  },
+  {
+    "id": "s2",
+    "timestamp": 1716153600000,
+    "transcript": "The Q3 launch is currently blocked because the LiteRT integration in the main branch hasn't been fully verified on Android 14."
+  },
+  {
+    "id": "s3",
+    "timestamp": 1716157200000,
+    "transcript": "In this week's LiteRT discussion, we decided to prioritize WebGPU support for the browser runtime to enable faster on-device inference."
+  },
+  {
+    "id": "s4",
+    "timestamp": 1716160800000,
+    "transcript": "I committed to finishing the Anti-gravity 2.0 LoRA pipeline by Friday so we can start the internal dogfooding session."
+  },
+  {
+    "id": "s5",
+    "timestamp": 1716164400000,
+    "transcript": "Abhi keeps mentioning that Anti-gravity 2.0 will enable personalized on-device fine-tuning for every user without compromising privacy."
+  }
+]
