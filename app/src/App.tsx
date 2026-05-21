@@ -4,8 +4,10 @@ import { stt } from './lib/stt'
 import { embed } from './lib/embeddings'
 import { saveMemo, getAllMemos } from './lib/storage'
 import type { VoiceMemo } from './lib/storage'
-import { retrieveRelevantContext } from './lib/rag'
-import { inference } from './lib/inference'
+import { retrieve } from './lib/rag'
+import { getInference } from './lib/inference'
+import { speak } from './lib/tts'
+import ModelDownloadGate from './components/ModelDownloadGate'
 import Demo from './pages/Demo'
 
 function App() {
@@ -66,20 +68,25 @@ function App() {
 
   const handleQuery = async () => {
     if (!query.trim() || isAnswering) return
-    
     setIsAnswering(true)
-    setAnswer('Searching memories...')
-    
+    setAnswer('Searching memories…')
+    setCitations([])
     try {
-      const { context, citations } = await retrieveRelevantContext(query)
+      const queryVec = await embed(query)
+      const memos = (await getAllMemos()).filter((m) => m.embedding?.length)
+      const { context, citations } = retrieve(queryVec, memos, 5)
       setCitations(citations)
-      
-      setAnswer('Thinking...')
-      const aiResponse = await inference.generateResponse(query, context)
-      setAnswer(aiResponse)
+      setAnswer('')
+      let acc = ''
+      const final = await getInference().generateResponse(query, context, (token) => {
+        acc += token
+        setAnswer(acc)
+      })
+      setAnswer(final)
+      speak(final)
     } catch (error) {
       console.error('Query failed:', error)
-      setAnswer('Sorry, I encountered an error while searching your memories.')
+      setAnswer('Sorry, I hit an error answering from your memories.')
     } finally {
       setIsAnswering(false)
     }
@@ -116,6 +123,7 @@ function App() {
       )}
 
       {activeTab === 'query' && (
+        <ModelDownloadGate>
         <main className="card query-view">
           <div className="query-input-group">
             <input 
@@ -148,6 +156,7 @@ function App() {
             )}
           </div>
         </main>
+        </ModelDownloadGate>
       )}
 
       {activeTab === 'demo' && <Demo />}
