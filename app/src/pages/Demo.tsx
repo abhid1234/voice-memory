@@ -35,9 +35,10 @@ function Demo() {
     try {
       const queryVec = await embed(q.question)
       const { context } = retrieve(queryVec, MEMOS, 5)
-      getInference().init('E2B')
-      let acc = ''
-      const final = await getInference().generateResponse(q.question, context, (token) => {
+      const llm = getInference()
+      llm.init("E2B")
+      let acc = ""
+      const final = await llm.generateResponse(q.question, context, (token) => {
         acc += token
         setAnswer(acc)
       })
