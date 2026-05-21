@@ -1,70 +1,86 @@
-import { LlmInference, FilesetResolver } from '@mediapipe/tasks-genai';
+import type { GemmaVariant } from "./model-store";
 
-const MODEL_URL = 'https://storage.googleapis.com/jm-downloads/mediapipe/llm/gemma-2b-it-gpu-int4.bin';
+export interface LlmWorkerLike {
+  postMessage(message: unknown): void;
+  onmessage: ((ev: { data: unknown }) => void) | null;
+}
 
-class InferenceEngine {
-  private llmInference: LlmInference | null = null;
-  private isInitializing = false;
+type Pending = {
+  resolve: (s: string) => void;
+  reject: (e: Error) => void;
+  onToken: (t: string) => void;
+};
 
-  async init() {
-    if (this.llmInference || this.isInitializing) return;
-    this.isInitializing = true;
+export class InferenceClient {
+  private nextId = 1;
+  private pending = new Map<number, Pending>();
+  private worker: LlmWorkerLike;
+  private ready = false;
 
-    try {
-      const genai = await FilesetResolver.forGenAiTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@latest/wasm'
-      );
+  constructor(worker: LlmWorkerLike) {
+    this.worker = worker;
+    this.worker.onmessage = (ev) => this.dispatch(ev.data);
+  }
 
-      this.llmInference = await LlmInference.createFromOptions(genai, {
-        baseOptions: {
-          modelAssetPath: MODEL_URL,
-        },
-        maxTokens: 512,
-        topK: 40,
-        temperature: 0.7,
-        randomSeed: 101,
-      });
-      
-      console.log('LLM Inference initialized');
-    } catch (error) {
-      console.error('Failed to initialize LLM Inference:', error);
-    } finally {
-      this.isInitializing = false;
+  private dispatch(m: unknown) {
+    const msg = m as {
+      type: string;
+      id?: number;
+      text?: string;
+      error?: string;
+    };
+    if (msg.type === "READY") {
+      this.ready = true;
+      return;
+    }
+    if (msg.id == null) return;
+    const p = this.pending.get(msg.id);
+    if (!p) return;
+    if (msg.type === "TOKEN") {
+      p.onToken(msg.text ?? "");
+    } else if (msg.type === "DONE") {
+      this.pending.delete(msg.id);
+      p.resolve(msg.text ?? "");
+    } else if (msg.type === "ERROR") {
+      this.pending.delete(msg.id);
+      p.reject(new Error(msg.error ?? "inference error"));
     }
   }
 
-  async loadLoRAAdapter(loraUrl: string) {
-    if (!this.llmInference) {
-      await this.init();
-    }
-    
-    if (this.llmInference) {
-      // In a real implementation, you'd fetch the LoRA delta and update the options
-      // MediaPipe GenAI tasks are evolving, this is the pattern for v1
-      console.log(`Hot-swapping LoRA adapter from ${loraUrl}`);
-      // this.llmInference.setOptions({ loraPath: loraUrl }); 
-    }
+  init(variant: GemmaVariant) {
+    if (!this.ready) this.worker.postMessage({ type: "INIT", variant });
   }
 
-  async generateResponse(prompt: string, context: string): Promise<string> {
-    if (!this.llmInference) {
-      await this.init();
-    }
-    
-    if (!this.llmInference) return "AI Engine not ready.";
-
-    const systemPrompt = `You are VoiceMemory AI. Answer the user's question based ONLY on the provided memories.
-    If you don't know the answer, say you don't have a memory of it.
-    
-    Memories:
-    ${context}
-    
-    User Question: ${prompt}
-    
-    Answer:`;
-
-    return this.llmInference.generateResponse(systemPrompt);
+  generateResponse(
+    query: string,
+    context: string,
+    onToken: (t: string) => void,
+  ): Promise<string> {
+    const id = this.nextId++;
+    return new Promise<string>((resolve, reject) => {
+      this.pending.set(id, { resolve, reject, onToken });
+      this.worker.postMessage({ type: "GENERATE", id, query, context });
+    });
   }
 }
 
-export const inference = new InferenceEngine();
+let singleton: InferenceClient | null = null;
+
+/** Lazily creates the real llm-worker-backed client (not used in unit tests). */
+export function getInference(): InferenceClient {
+  if (!singleton) {
+    const worker = new Worker(new URL("./llm-worker.ts", import.meta.url), {
+      type: "module",
+    });
+    singleton = new InferenceClient(worker as unknown as LlmWorkerLike);
+  }
+  return singleton;
+}
+
+// TEMP shim so the Phase C Demo page keeps compiling until it is reworked in Phase C.
+export const inference = {
+  async generateResponse(prompt: string, _context: string): Promise<string> {
+    void _context;
+    return `(demo placeholder) ${prompt}`;
+  },
+};
