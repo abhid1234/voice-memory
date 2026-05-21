@@ -52,16 +52,15 @@ export async function downloadModel(
 ): Promise<void> {
   if (await isModelCached(variant)) return
   const { url, file } = GEMMA_VARIANTS[variant]
-  const res = await fetch(url)
-  if (!res.ok || !res.body) throw new Error(`Model download failed: HTTP ${res.status}`)
-  const totalBytes = Number(res.headers.get('content-length') ?? 0)
-
   const dir = await modelDir()
   const handle = await dir.getFileHandle(file, { create: true })
   const writable = await handle.createWritable()
-  const reader = res.body.getReader()
-  let loadedBytes = 0
   try {
+    const res = await fetch(url)
+    if (!res.ok || !res.body) throw new Error(`Model download failed: HTTP ${res.status}`)
+    const totalBytes = Number(res.headers.get('content-length') ?? 0)
+    const reader = res.body.getReader()
+    let loadedBytes = 0
     for (;;) {
       const { done, value } = await reader.read()
       if (done) break
@@ -69,8 +68,16 @@ export async function downloadModel(
       loadedBytes += value.byteLength
       onProgress?.({ loadedBytes, totalBytes })
     }
-  } finally {
     await writable.close()
+  } catch (e) {
+    // Don't leave a truncated file that isModelCached() would later treat as complete.
+    try {
+      await writable.close()
+    } catch {
+      /* already errored */
+    }
+    await dir.removeEntry(file).catch(() => {})
+    throw e
   }
 }
 

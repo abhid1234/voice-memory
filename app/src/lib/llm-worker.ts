@@ -25,7 +25,12 @@ async function doInit(variant: GemmaVariant) {
 
 /** Idempotent: starts init once and returns the same promise for concurrent callers. */
 function ensureInit(variant: GemmaVariant) {
-  if (!initPromise) initPromise = doInit(variant);
+  if (!initPromise) {
+    initPromise = doInit(variant).catch((e) => {
+      initPromise = null // allow a retry after a failed load
+      throw e
+    })
+  }
   return initPromise;
 }
 
