@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { stt } from './lib/stt'
 import { embed } from './lib/embeddings'
@@ -11,15 +11,6 @@ import ModelDownloadGate from './components/ModelDownloadGate'
 import Demo from './pages/Demo'
 
 function App() {
-  if (window.location.search.includes('spike')) {
-    const Spike = lazy(() => import('./pages/Spike'))
-    return (
-      <Suspense fallback={<p>Loading spike…</p>}>
-        <Spike />
-      </Suspense>
-    )
-  }
-
   const isDemoMode = window.location.hostname.includes('voicememory') || window.location.search.includes('demo')
   const [activeTab, setActiveTab] = useState<'record' | 'query' | 'timeline' | 'demo'>(isDemoMode ? 'demo' : 'record')
   const [isRecording, setIsRecording] = useState(false)
