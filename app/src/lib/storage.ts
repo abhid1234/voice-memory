@@ -1,6 +1,11 @@
 import { openDB } from "idb";
 import type { IDBPDatabase } from "idb";
 
+// IndexedDB object stores are schemaless, so the `embedding` field was added
+// without a DB version bump or migration. New memos always include it (the app
+// embeds the transcript before saving); any record written before the field
+// existed simply lacks it and is skipped by RAG (see rag.retrieve). No backfill
+// is possible without re-running the embedding model, so none is attempted.
 export interface VoiceMemo {
   id?: number;
   timestamp: number;
