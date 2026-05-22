@@ -62,6 +62,12 @@ const MenuIcon = () => (
   </svg>
 );
 
+const ShieldIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
     <circle cx="12" cy="12" r="3" />
@@ -1016,20 +1022,26 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Mobile Floating Header */}
-      <header className="mobile-header">
-        <button 
-          className="mobile-menu-btn" 
-          onClick={() => setIsSidebarOpen(true)}
-          title="Open Menu"
-        >
-          <MenuIcon />
-        </button>
-        <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img src="/sleek-logo.png" className="mini-logo" alt="logo" style={{ height: '24px' }} />
-          <span className="site-title" style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-main)' }}>VoiceMemory</span>
+      {/* Persistent Site Header */}
+      <header className="site-header">
+        <div className="header-left">
+          <button 
+            className="mobile-menu-btn" 
+            onClick={() => setIsSidebarOpen(true)}
+            title="Open Menu"
+          >
+            <MenuIcon />
+          </button>
+          <div className="desktop-shield-icon" style={{ color: 'var(--accent-bright)' }}>
+            <ShieldIcon />
+          </div>
+          <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src="/sleek-logo.png" className="mini-logo" alt="logo" style={{ height: '24px' }} />
+            <span className="site-title" style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-main)' }}>VoiceMemory</span>
+          </div>
         </div>
-        <div className="mobile-actions">
+        
+        <div className="header-right">
           <button 
             className="theme-toggle-btn-icon"
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
@@ -1045,6 +1057,7 @@ function App() {
           >
             <SettingsIcon />
           </button>
+          <div className="header-profile-circle">A</div>
         </div>
       </header>
 
@@ -1064,14 +1077,14 @@ function App() {
             onClick={() => { setActiveTab('dictation'); setIsSidebarOpen(false); }}
           >
             <MicIcon />
-            <span>AI Dictate</span>
+            <span>Dictation</span>
           </button>
           <button 
             className={`sidebar-nav-link ${activeTab === 'memories' ? 'active' : ''}`}
             onClick={() => { setActiveTab('memories'); setIsSidebarOpen(false); }}
           >
             <MemoriesIcon />
-            <span>Galaxy Map</span>
+            <span>Memories</span>
           </button>
           <button 
             className={`sidebar-nav-link ${activeTab === 'timeline' ? 'active' : ''}`}
@@ -1085,14 +1098,14 @@ function App() {
             onClick={() => { setActiveTab('query'); setIsSidebarOpen(false); }}
           >
             <SearchIcon />
-            <span>Search Memory</span>
+            <span>Search</span>
           </button>
           <button 
             className={`sidebar-nav-link ${activeTab === 'vault' ? 'active' : ''}`}
             onClick={() => { setActiveTab('vault'); setIsSidebarOpen(false); }}
           >
             <VaultIcon />
-            <span>Privacy Vault</span>
+            <span>Vault</span>
           </button>
           {isDemoMode && (
             <button 
@@ -1106,14 +1119,16 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button 
-            className="sidebar-nav-link theme-toggle-btn"
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            style={{ border: '1px solid var(--card-border)', borderRadius: '8px', padding: '0.6rem' }}
-          >
-            <span style={{ fontSize: '1.1rem' }}>{theme === 'light' ? '🌙' : '☀️'}</span>
-            <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
-          </button>
+          <div className="cloud-sync-card">
+            <div className="cloud-sync-header">
+              <svg className="cloud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.87-1.92-3.5-4-3.5a4.5 4.5 0 0 0-4.5 4.5c0 .35.03.68.08 1A4 4 0 0 0 5 21h12" />
+                <path d="m9 13 2 2 4-4" />
+              </svg>
+              <span>Cloud Sync</span>
+            </div>
+            <div className="cloud-sync-subtext">Up to date</div>
+          </div>
           
           <div className="sidebar-footer-info" style={{ padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             <div className="engine-status" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
@@ -1384,19 +1399,71 @@ function App() {
                   <span className="footer-meta">Words: {draftWordCount}</span>
                 </div>
               </div>
+
+              {/* Bottom Cards Grid - Desktop only */}
+              <div className="bottom-settings-grid mobile-hidden">
+                {/* AI Engine Model Card */}
+                <div className="section-card bottom-grid-card">
+                  <div className="bottom-grid-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                    <h3 className="section-title" style={{ margin: 0 }}>AI Engine Model</h3>
+                    <span className="whisper-v3-badge">Whisper v3</span>
+                  </div>
+                  <div className="model-segmented-control">
+                    {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
+                      <button
+                        key={model}
+                        className={`model-segment-btn ${selectedModel === model ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedModel(model);
+                          stt.preloadModel(model, setStatusText, (file, prog) => {
+                            setDownloadProgress(prog);
+                            setDownloadingFile(file);
+                          });
+                          setStatusText(`Switched AI Model to ${model}`);
+                        }}
+                      >
+                        {model === 'Xenova/whisper-tiny.en' && 'Speed'}
+                        {model === 'Xenova/whisper-base.en' && 'Balanced'}
+                        {model === 'Xenova/whisper-small.en' && 'Accuracy'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Workspace Accent Card */}
+                <div className="section-card bottom-grid-card">
+                  <h3 className="section-title" style={{ marginBottom: '0.8rem' }}>Workspace Accent</h3>
+                  <div className="accent-color-circles">
+                    {(['emerald', 'violet', 'ocean', 'amber'] as const).map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`accent-circle-btn ${color} ${accentTheme === color ? 'active' : ''}`}
+                        onClick={() => setAccentTheme(color)}
+                        title={`Switch to ${color} theme`}
+                        aria-label={`Switch to ${color} theme`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
             </div>
 
             {/* Right Column: User Profile + Format Style + Vocabulary + Settings */}
             <div className="dictation-right-column">
               {/* User Profile Card */}
-              <div className="user-profile-card">
+              <div className="user-profile-card mobile-hidden">
                 <div className="profile-header">
                   <div className="profile-avatar">A</div>
                   <div className="profile-meta">
-                    <span className="profile-name">Abhi</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="profile-name">Deep Thinker</span>
+                      <span className="profile-badge">Premium Plan</span>
+                    </div>
                     <span className="profile-status">
                       <span className="live-dot" style={{ backgroundColor: 'var(--accent-bright)' }}></span>
-                      Local AI Engine Active
+                      Secure Intellect Active
                     </span>
                   </div>
                 </div>
@@ -1415,11 +1482,11 @@ function App() {
               {/* Writing Format Style Card */}
               <div className="section-card">
                 <h3 className="section-title">Writing Format Style</h3>
-                <div className="style-segmented-control" id="tour-style-select">
+                <div className="style-vertical-list" id="tour-style-select">
                   {(['cleaned', 'bullets', 'email', 'slack', 'custom', 'raw'] as const).map((style) => (
                     <button
                       key={style}
-                      className={`segment-btn ${dictationStyle === style ? 'active' : ''}`}
+                      className={`style-list-btn ${dictationStyle === style ? 'active' : ''}`}
                       onClick={() => setDictationStyle(style)}
                     >
                       {style === 'cleaned' && <SparklesIcon />}
@@ -1429,12 +1496,12 @@ function App() {
                       {style === 'custom' && <EditIcon />}
                       {style === 'raw' && <FileTextIcon />}
                       <span>
-                        {style === 'cleaned' && 'Cleaned'}
-                        {style === 'bullets' && 'Bullets'}
-                        {style === 'email' && 'Email'}
-                        {style === 'slack' && 'Slack'}
-                        {style === 'custom' && 'Custom'}
-                        {style === 'raw' && 'Raw'}
+                        {style === 'cleaned' && 'Cleaned Transcript'}
+                        {style === 'bullets' && 'Action Bullets'}
+                        {style === 'email' && 'Executive Summary'}
+                        {style === 'slack' && 'Slack Message'}
+                        {style === 'custom' && 'Custom Instruction'}
+                        {style === 'raw' && 'Raw Text'}
                       </span>
                     </button>
                   ))}
@@ -1474,21 +1541,36 @@ function App() {
                         </button>
                       </span>
                     ))}
-                  </div>
 
-                  <input 
-                    type="text" 
-                    className="dictionary-input"
-                    placeholder="Add term (press Enter or comma)..." 
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleAddTag}
-                  />
+                    <div className="inline-vocab-form">
+                      <input 
+                        type="text" 
+                        className="inline-vocab-input"
+                        placeholder="Add term..." 
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleAddTag}
+                      />
+                      <button 
+                        type="button" 
+                        className="inline-vocab-add-btn"
+                        onClick={() => {
+                          const cleaned = tagInput.trim().replace(/,$/, '');
+                          if (cleaned && !dictionaryTags.includes(cleaned)) {
+                            setDictionaryTags([...dictionaryTags, cleaned]);
+                          }
+                          setTagInput('');
+                        }}
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* AI Engine Settings */}
-              <div className="section-card">
+              <div className="section-card desktop-hidden">
                 <h3 className="section-title">AI Engine Settings</h3>
                 <div className="dictionary-editor-group">
                   <label className="input-label">Whisper Model Weight:</label>
@@ -1506,7 +1588,8 @@ function App() {
                     }}
                   >
                     <option value="Xenova/whisper-tiny.en">Tiny.en (~75MB - Ultra-fast)</option>
-                    <option value="Xenova/whisper-base.en">Base.en (~290MB - High Accuracy)</option>
+                    <option value="Xenova/whisper-base.en">Base.en (~290MB - Balanced)</option>
+                    <option value="Xenova/whisper-small.en">Small.en (~460MB - High Accuracy)</option>
                   </select>
                   <p className="model-helper-text" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', lineHeight: '1.4' }}>
                     Larger models are more accurate but take longer to download and require more RAM.
@@ -1560,16 +1643,21 @@ function App() {
                       style={{ display: 'none' }} 
                     />
                   </div>
+                </div>
+              </div>
 
-                  {!isStandalone && (
-                    <div className="pwa-durability-incentive-box" style={{ marginTop: '1.2rem', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--card-border)', background: 'rgba(255, 255, 255, 0.02)', display: 'flex', gap: '0.5rem' }}>
-                      <span className="incentive-icon" style={{ fontSize: '1.1rem' }}>🔒</span>
-                      <div className="incentive-content" style={{ fontSize: '0.75rem', lineHeight: '1.4' }}>
-                        <strong style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Avoid iOS 7-Day Purge Constraints</strong>
-                        <p style={{ margin: 0, color: 'var(--text-muted)' }}>Safari clears standard browser tab storage if unvisited for 7 days. Install this PWA to gain persistent durability.</p>
-                      </div>
-                    </div>
-                  )}
+              {/* On-Device Processing Card */}
+              <div className="section-card on-device-processing-card mobile-hidden" style={{ marginTop: '1.2rem' }}>
+                <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                  <div style={{ color: 'var(--accent-bright)' }}>
+                    <ShieldIcon />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.2rem 0', fontSize: '0.9rem', fontWeight: 600 }}>On-Device Processing</h4>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                      Audio never leaves this machine unless explicitly synced.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1881,16 +1969,8 @@ function App() {
           className={`mobile-nav-btn ${activeTab === 'dictation' ? 'active' : ''}`}
           onClick={() => setActiveTab('dictation')}
         >
-          <MicIcon />
-          <span>Dictate</span>
-          <span className="active-dot"></span>
-        </button>
-        <button 
-          className={`mobile-nav-btn ${activeTab === 'memories' ? 'active' : ''}`}
-          onClick={() => setActiveTab('memories')}
-        >
           <MemoriesIcon />
-          <span>Galaxy</span>
+          <span>Memories</span>
           <span className="active-dot"></span>
         </button>
         <button 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.0.3] - 2026-05-22
+
+### Added
+- **Premium Plan & Secure Status Indicator**: Upgraded the user profile header with a "Premium Plan" badge, updated the avatar/name to "Deep Thinker", and changed active status to "Secure Intellect Active".
+- **On-Device Security Card**: Added a dedicated "On-Device Processing" card with security metrics to reassure users that transcripts are private and secure.
+
+### Changed
+- **Vertical Style Selector Layout**: Refactored the writing format style control from a horizontal segmented bar to a clean vertical list of options with descriptive titles (e.g., "Cleaned Transcript", "Action Bullets", "Executive Summary").
+- **Inline Vocabulary Form**: Redesigned the vocabulary term input into an inline form with a dedicated "+ Add" button for better accessibility and usability.
+- **AI Settings Optimization**: Reorganized settings to hide technical Whisper/Gemma parameters on desktop layouts while keeping them available on mobile.
+- **Mobile Navigation Polish**: Updated labels in the mobile tab bar to clarify sections (e.g., naming the primary view "Memories").
+
 ## [0.0.0.2] - 2026-05-22
 
 ### Added
