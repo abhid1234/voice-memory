@@ -3,7 +3,7 @@ import { stt } from "./stt";
 
 describe("STTEngine", () => {
   let mockWorkerInstance: any = null;
-  const originalWorker = global.Worker;
+  const originalWorker = (globalThis as any).Worker;
 
   beforeEach(() => {
     mockWorkerInstance = {
@@ -14,7 +14,7 @@ describe("STTEngine", () => {
     };
 
     // Mock global Worker as a constructible spy
-    global.Worker = vi.fn().mockImplementation(function () {
+    (globalThis as any).Worker = vi.fn().mockImplementation(function () {
       return mockWorkerInstance;
     }) as any;
 
@@ -26,7 +26,7 @@ describe("STTEngine", () => {
   });
 
   afterEach(() => {
-    global.Worker = originalWorker;
+    (globalThis as any).Worker = originalWorker;
     // Terminate any active worker on stt singleton to avoid leaking state
     stt.setWordModel("Xenova/whisper-tiny.en");
   });
@@ -43,7 +43,7 @@ describe("STTEngine", () => {
 
     stt.preloadModel("Xenova/whisper-tiny.en", onStatus, onProgress);
 
-    expect(global.Worker).toHaveBeenCalled();
+    expect((globalThis as any).Worker).toHaveBeenCalled();
     expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith({
       type: "INIT",
       data: { modelName: "Xenova/whisper-tiny.en" },
@@ -90,7 +90,7 @@ describe("STTEngine", () => {
     // Call preloadModel first to instantiate the mock worker
     stt.preloadModel("Xenova/whisper-tiny.en");
 
-    const promise = stt.transcribeBuffer(audioData, onResult, onStatus);
+    await stt.transcribeBuffer(audioData, onResult, onStatus);
 
     expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith({
       type: "TRANSCRIBE",
