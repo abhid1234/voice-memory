@@ -1,0 +1,27 @@
+[
+  {
+    "id": "q1",
+    "question": "What did Priya say about model scaling?",
+    "answer": "Priya said dense models are still tracking the scaling curves, but she wants the team watching compute efficiency on the older accelerators before committing to a bigger training run."
+  },
+  {
+    "id": "q2",
+    "question": "Who flagged the launch as blocked, and why?",
+    "answer": "The launch is blocked on the on-device runtime integration, which hasn't been verified on the older Android builds. Marcus owns getting that check green."
+  },
+  {
+    "id": "q3",
+    "question": "Summarize this week's on-device runtime discussion.",
+    "answer": "This week the team prioritized WebGPU support for the browser path so inference runs client-side, validated int4 quantization on the edge build (about a 4x memory drop), and noted the launch is still blocked on older-Android verification."
+  },
+  {
+    "id": "q4",
+    "question": "What did I commit to in standup?",
+    "answer": "You committed to finishing the weekly fine-tuning pipeline by Friday so the team can start the internal dogfood round next week."
+  },
+  {
+    "id": "q5",
+    "question": "What's the case for weekly fine-tuning?",
+    "answer": "Priya's argument is that weekly on-device fine-tuning gives each user a personalized model without their data ever leaving their device — retrieval handles fact recall, fine-tuning handles voice and style."
+  }
+]

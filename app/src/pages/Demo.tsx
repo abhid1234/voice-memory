@@ -1,60 +1,79 @@
 import { useState } from 'react'
-import { inference } from '../lib/inference'
-import syntheticData from '../../../public-demo/synthetic_memory.json'
+import questions from '../data/demo-questions.json'
+import memory from '../data/synthetic-memory.json'
+import { embed } from '../lib/embeddings'
+import { retrieve } from '../lib/rag'
+import { getInference } from '../lib/inference'
+import { speak } from '../lib/tts'
+import type { VoiceMemo } from '../lib/storage'
+
+// Adapt the static JSON (number[] embeddings) into the VoiceMemo shape rag.retrieve expects.
+const MEMOS: VoiceMemo[] = memory.map((m) => ({
+  timestamp: m.timestamp,
+  transcript: m.transcript,
+  embedding: new Float32Array(m.embedding),
+}))
 
 function Demo() {
   const [answer, setAnswer] = useState('')
-  const [isThinking, setIsThinking] = useState(false)
+  const [active, setActive] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
-  const sampleQuestions = [
-    "What did Sam say about model scaling?",
-    "Who's blocking the Q3 launch?",
-    "Summarize this week's LiteRT discussions"
-  ]
+  // Zero-permission: instant precomputed answer + speak. No mic, no model, no download.
+  const handlePrecomputed = (q: (typeof questions)[number]) => {
+    setActive(q.id)
+    setAnswer(q.answer)
+    speak(q.answer)
+  }
 
-  const handleSampleQuery = async (query: string) => {
-    setIsThinking(true)
-    setAnswer('Searching synthetic memory...')
-    
+  // Optional live: real on-device RAG + Gemma 4 (needs WebGPU + one-time model download).
+  const handleLive = async (q: (typeof questions)[number]) => {
+    if (busy) return
+    setActive(q.id)
+    setBusy(true)
+    setAnswer('Thinking on-device…')
     try {
-      // For the demo, we override the retrieval to use synthetic data
-      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-      const relevant = syntheticData.filter(m => 
-        queryTerms.some(t => m.transcript.toLowerCase().includes(t))
-      );
-      
-      const context = relevant.map((m, i) => `[${i+1}] ${m.transcript}`).join('\n\n');
-      
-      setAnswer('Thinking (on-device)...')
-      const aiResponse = await inference.generateResponse(query, context);
-      setAnswer(aiResponse);
-      
-      // Text-to-Speech playback
-      const utterance = new SpeechSynthesisUtterance(aiResponse);
-      window.speechSynthesis.speak(utterance);
-      
-    } catch (e) {
-      setAnswer('Demo error. Please check console.')
+      const queryVec = await embed(q.question)
+      const { context } = retrieve(queryVec, MEMOS, 5)
+      const llm = getInference()
+      llm.init("E2B")
+      let acc = ""
+      const final = await llm.generateResponse(q.question, context, (token) => {
+        acc += token
+        setAnswer(acc)
+      })
+      setAnswer(final)
+      speak(final)
+    } catch {
+      setAnswer('Live mode needs a WebGPU browser and a one-time model download. The instant answers above work everywhere.')
     } finally {
-      setIsThinking(false)
+      setBusy(false)
     }
   }
 
   return (
     <div className="demo-page card">
       <h2>Try VoiceMemory</h2>
-      <p className="status-text">No permissions needed. Tapping below queries a synthetic memory of Abhi's industry conversations.</p>
-      
+      <p className="status-text">
+        No permissions needed. These are sample questions over a synthetic memory of AI-industry conversations.
+        Tap one to hear the answer.
+      </p>
+
       <div className="sample-queries">
-        {sampleQuestions.map((q, i) => (
-          <button 
-            key={i} 
-            className="sample-q-btn"
-            onClick={() => handleSampleQuery(q)}
-            disabled={isThinking}
-          >
-            ▶ {q}
-          </button>
+        {questions.map((q) => (
+          <div key={q.id} className="sample-q-row">
+            <button className="sample-q-btn" onClick={() => handlePrecomputed(q)} disabled={busy}>
+              ▶ {q.question}
+            </button>
+            <button
+              className="sample-q-live"
+              onClick={() => handleLive(q)}
+              disabled={busy}
+              title="Run the real model on-device (needs WebGPU + a one-time download)"
+            >
+              ⚡ live
+            </button>
+          </div>
         ))}
       </div>
 
@@ -62,15 +81,16 @@ function Demo() {
         {answer && (
           <div className="ai-response">
             <p>{answer}</p>
+            {active && <span className="demo-hint">▶ instant · ⚡ live runs Gemma 4 on your device</span>}
           </div>
         )}
       </div>
 
       <div className="install-prompt">
-        <button className="record-btn" style={{fontSize: '1rem', padding: '1rem 2rem'}}>
+        <button className="record-btn secondary" style={{ fontSize: '1rem', padding: '1rem 2rem' }}>
           Install for yourself
         </button>
-        <p className="status-text">Only the full app requires mic permissions.</p>
+        <p className="status-text">Only the full app asks for microphone access.</p>
       </div>
     </div>
   )
