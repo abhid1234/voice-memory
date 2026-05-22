@@ -1,0 +1,14 @@
+[
+  { "id": "s1", "timestamp": 1716150000000, "transcript": "Priya walked through the model scaling results — dense models are still tracking the scaling curves, but she wants us watching compute efficiency on the older accelerators before we commit to a bigger run." },
+  { "id": "s2", "timestamp": 1716153600000, "transcript": "The launch is blocked right now because the on-device runtime integration on the main branch hasn't been verified on the older Android builds. Marcus owns getting that green." },
+  { "id": "s3", "timestamp": 1716157200000, "transcript": "In this week's on-device runtime discussion we decided to prioritize WebGPU support for the browser path so inference can run client-side without a server round trip." },
+  { "id": "s4", "timestamp": 1716160800000, "transcript": "I committed in standup to finishing the weekly fine-tuning pipeline by Friday so we can start the internal dogfood round next week." },
+  { "id": "s5", "timestamp": 1716164400000, "transcript": "Priya keeps making the case that weekly on-device fine-tuning is the unlock — personalized models per user without anyone's data leaving their device." },
+  { "id": "s6", "timestamp": 1716168000000, "transcript": "Marcus benchmarked int4 quantization on the edge build: about a 4x memory drop with only a small quality hit on the eval set. Good enough to ship to phones." },
+  { "id": "s7", "timestamp": 1716171600000, "transcript": "We argued about RAG versus fine-tuning again. Consensus: retrieval for fact recall, fine-tuning for voice and style. Stop conflating them." },
+  { "id": "s8", "timestamp": 1716175200000, "transcript": "Latency target for the voice loop is under one and a half seconds from end of question to start of spoken answer. Streaming the tokens is what makes it feel instant." },
+  { "id": "s9", "timestamp": 1716178800000, "transcript": "Dana raised the storage durability problem — some mobile browsers evict local storage after about a week of non-use. Installing to the home screen bumps it to a more durable class." },
+  { "id": "s10", "timestamp": 1716182400000, "transcript": "Decision: the public demo ships zero-permission. Pre-recorded synthetic memory, tap a question, hear the answer. No microphone prompt so it survives in-app browsers." },
+  { "id": "s11", "timestamp": 1716186000000, "transcript": "Marcus flagged a loader crash on one of the smaller edge models on certain GPUs — tracking upstream. Fallback is the larger variant on a laptop until it's fixed." },
+  { "id": "s12", "timestamp": 1716189600000, "transcript": "Dana summarized the week: WebGPU browser path prioritized, int4 quantization validated, launch still blocked on the older-Android verification." }
+]

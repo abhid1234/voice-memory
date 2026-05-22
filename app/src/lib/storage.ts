@@ -1,26 +1,30 @@
-import { openDB } from 'idb';
-import type { IDBPDatabase } from 'idb';
+import { openDB } from "idb";
+import type { IDBPDatabase } from "idb";
 
 export interface VoiceMemo {
   id?: number;
   timestamp: number;
   transcript: string;
   rawTranscript?: string;
+  embedding?: Float32Array;
   audioBlob?: Blob;
   tags?: string[];
 }
 
-const DB_NAME = 'VoiceMemoryDB';
-const STORE_NAME = 'memos';
+const DB_NAME = "VoiceMemoryDB";
+const STORE_NAME = "memos";
 
-let dbPromise: Promise<IDBPDatabase>;
+let dbPromise: Promise<IDBPDatabase> | undefined;
 
 function getDB() {
   if (!dbPromise) {
     dbPromise = openDB(DB_NAME, 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+          db.createObjectStore(STORE_NAME, {
+            keyPath: "id",
+            autoIncrement: true,
+          });
         }
       },
     });
@@ -38,6 +42,11 @@ export async function getAllMemos(): Promise<VoiceMemo[]> {
   return db.getAll(STORE_NAME);
 }
 
+export async function getMemo(id: number): Promise<VoiceMemo | undefined> {
+  const db = await getDB();
+  return db.get(STORE_NAME, id);
+}
+
 export async function deleteMemo(id: number): Promise<void> {
   const db = await getDB();
   await db.delete(STORE_NAME, id);
@@ -46,11 +55,10 @@ export async function deleteMemo(id: number): Promise<void> {
 export async function exportTranscriptsForTraining(): Promise<string> {
   const allMemos = await getAllMemos();
   return allMemos
-    .map(memo => JSON.stringify({
-      text: memo.transcript,
-      timestamp: memo.timestamp
-    }))
-    .join('\n');
+    .map((memo) =>
+      JSON.stringify({ text: memo.transcript, timestamp: memo.timestamp }),
+    )
+    .join("\n");
 }
 
 export async function wipeAllMemos(): Promise<void> {

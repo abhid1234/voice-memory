@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import './App.css'
 import { stt } from './lib/stt'
+import { embed } from './lib/embeddings'
 import { saveMemo, getAllMemos, deleteMemo, wipeAllMemos } from './lib/storage'
 import type { VoiceMemo } from './lib/storage'
-import { retrieveRelevantContext } from './lib/rag'
-import { inference } from './lib/inference'
+import { retrieve } from './lib/rag'
+import { getInference, inference } from './lib/inference'
+import { speak } from './lib/tts'
+import ModelDownloadGate from './components/ModelDownloadGate'
 import Demo from './pages/Demo'
 import { playRecordStartSound, playRecordStopSound, playSuccessSound, playDeleteSound, playUndoSound } from './lib/synth'
 import { computeWordDiff } from './lib/diff'
@@ -858,12 +861,21 @@ function App() {
   const handleSavePolishedMemo = async () => {
     if (!editableDraft.trim()) return;
 
+    setStatusText('Generating RAG embedding...');
+    let embedding: Float32Array | undefined;
+    try {
+      embedding = await embed(editableDraft.trim());
+    } catch (err) {
+      console.error('Failed to generate embedding:', err);
+    }
+
     await saveMemo({
       timestamp: Date.now(),
       transcript: editableDraft.trim(),
       rawTranscript: currentTranscript.trim() || undefined,
       audioBlob: lastAudioBlob,
-      tags: classifyTags(editableDraft)
+      tags: classifyTags(editableDraft),
+      embedding
     });
     
     playSuccessSound();
@@ -924,20 +936,25 @@ function App() {
 
   const handleQuery = async () => {
     if (!query.trim() || isAnswering) return
-    
     setIsAnswering(true)
-    setAnswer('Searching memories...')
-    
+    setAnswer('Searching memories…')
+    setCitations([])
     try {
-      const { context, citations } = await retrieveRelevantContext(query)
+      const queryVec = await embed(query)
+      const memos = (await getAllMemos()).filter((m) => m.embedding?.length)
+      const { context, citations } = retrieve(queryVec, memos, 5)
       setCitations(citations)
-      
-      setAnswer('Thinking...')
-      const aiResponse = await inference.generateResponse(query, context)
-      setAnswer(aiResponse)
+      setAnswer('')
+      let acc = ''
+      const final = await getInference().generateResponse(query, context, (token) => {
+        acc += token
+        setAnswer(acc)
+      })
+      setAnswer(final)
+      speak(final)
     } catch (error) {
       console.error('Query failed:', error)
-      setAnswer('Sorry, I encountered an error while searching your memories.')
+      setAnswer('Sorry, I hit an error answering from your memories.')
     } finally {
       setIsAnswering(false)
     }
@@ -1535,50 +1552,52 @@ function App() {
         )}
 
         {activeTab === 'query' && (
-          <main className="query-workspace">
-            <div className="query-card">
-              <h2 className="workspace-heading">Search Memories</h2>
-              <p className="workspace-subheading">Ask questions about everything you have ever dictated. Retrieval and synthesis runs locally.</p>
-              
-              <div className="query-input-wrapper">
-                <input 
-                  type="text" 
-                  className="query-large-input"
-                  placeholder="e.g. What did I dictate about the Q3 launch plan?" 
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
-                />
-                <button className="query-submit-btn" onClick={handleQuery} disabled={isAnswering}>
-                  {isAnswering ? '...' : 'Search'}
-                </button>
-              </div>
+          <ModelDownloadGate>
+            <main className="query-workspace">
+              <div className="query-card">
+                <h2 className="workspace-heading">Search Memories</h2>
+                <p className="workspace-subheading">Ask questions about everything you have ever dictated. Retrieval and synthesis runs locally.</p>
+                
+                <div className="query-input-wrapper">
+                  <input 
+                    type="text" 
+                    className="query-large-input"
+                    placeholder="e.g. What did I dictate about the Q3 launch plan?" 
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
+                  />
+                  <button className="query-submit-btn" onClick={handleQuery} disabled={isAnswering}>
+                    {isAnswering ? '...' : 'Search'}
+                  </button>
+                </div>
 
-              <div className="answer-workspace">
-                {answer && (
-                  <div className="editorial-answer">
-                    <h4 className="answer-heading">AI Response</h4>
-                    <p className="answer-body">{answer}</p>
-                    
-                    {citations.length > 0 && (
-                      <div className="answer-sources">
-                        <h5 className="sources-heading">Cited Memories</h5>
-                        <div className="sources-grid">
-                          {citations.map((cite, i) => (
-                            <div key={i} className="source-item">
-                              <span className="source-index">Source [{i + 1}]</span>
-                              <p className="source-text">"{cite.transcript}"</p>
-                              <span className="source-date">{new Date(cite.timestamp).toLocaleDateString()}</span>
-                            </div>
-                          ))}
+                <div className="answer-workspace">
+                  {answer && (
+                    <div className="editorial-answer">
+                      <h4 className="answer-heading">AI Response</h4>
+                      <p className="answer-body">{answer}</p>
+                      
+                      {citations.length > 0 && (
+                        <div className="answer-sources">
+                          <h5 className="sources-heading">Cited Memories</h5>
+                          <div className="sources-grid">
+                            {citations.map((cite, i) => (
+                              <div key={i} className="source-item">
+                                <span className="source-index">Source [{i + 1}]</span>
+                                <p className="source-text">"{cite.transcript}"</p>
+                                <span className="source-date">{new Date(cite.timestamp).toLocaleDateString()}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </ModelDownloadGate>
         )}
 
         {activeTab === 'timeline' && (

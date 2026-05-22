@@ -4,7 +4,7 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 
 ## Last updated
 
-2026-05-22 — Phase 11 Premium Experience & Personalization Suite complete, build and lint check fully verified (0 errors, 0 warnings), and production deployment live on Vercel.
+2026-05-22 — Phase 11 Premium Experience & Personalization Suite complete, build and lint check fully verified (0 errors, 0 warnings), merged with origin/main, and verified.
 
 ## Phase status
 
@@ -12,7 +12,7 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 - ✅ **Phase 1: PWA shell** — Completed. Scaffolded app directory with Vite + service worker + manifest, loads instantly.
 - ✅ **Phase 2: Capture flow** — Completed. Microphone recording + local Whisper STT transcribing on-device offline.
 - ✅ **Phase 3: On-device Gemma + RAG query** — Completed. Context retrieved via similarity embeddings search + local Gemma response logic.
-- ✅ **Phase 4: Anti-gravity weekly LoRA pipeline** — Completed. Scaffolded pipeline cron and LoRA configuration.
+- ✅ **Phase 4: Anti-gravity weekly LoRA pipeline groundwork** — Completed. Scaffolded pipeline cron and LoRA configuration.
 - ✅ **Phase 5: Public demo lane on ondeviceml.space** — Completed. Interactive Demo page with zero-permissions, static synthetic industry dataset, and local TTS audio answering in under 1.5 seconds.
 - ✅ **Phase 6: LinkedIn launch** — Ready. Demo video script authored at `docs/demo-video-script.md`. Social post draft lives outside git.
 - ✅ **Phase 7: Premium features & Responsive UI** — Completed. Full Editorial sheet editor, original timeline playback caching, keyword tags, offline fallback insights.
@@ -21,18 +21,21 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 
 ## Resume here next session
 
-**All implementation phases are completed, build verified, and deployed to production!** Next steps involve recording the product video demo using the script at [demo-video-script.md](file:///home/abhidaas/Core/Workspace/AntigravityCLI/voice-memory-antigravity/docs/demo-video-script.md) and publishing the launch announcement on LinkedIn.
+**All implementation phases (up to Phase 11) are completed, merged with origin/main, build verified!** Next steps involve recording the product video demo using the script at [demo-video-script.md](file:///home/abhidaas/Core/Workspace/AntigravityCLI/voice-memory-antigravity/docs/demo-video-script.md) and publishing the launch announcement on LinkedIn.
 
-```bash
-# Verify the final production build again if needed
-cd ~/Core/Workspace/AntigravityCLI/voice-memory-antigravity/app
-npm run build
-```
+**Remaining work, two tracks:**
 
-Verify the PWA install path and premium suite:
-1. Open the production URL on your phone or desktop: https://voice-memory-phi.vercel.app
-2. Walk through the spotlight onboarding tour, test dragging/dropping a `.wav`/`.mp3` file, and switch the accent theme.
-3. Once launched, verify the fluid waveform canvas, synth sounds, and offline functionality are working flawlessly.
+1. **On-device manual acceptance (no code; needs real devices):**
+   - **Capture + Query** — one WebGPU session (laptop/Chromebook): `cd app && npm run build && npm run preview`, record memos → ask a question → confirm streamed Gemma 4 answer + citation + spoken TTS, and **no inference network traffic**. If E2B won't load, switch the model variant to `E4B` (one-line: `VARIANT` in `model-store`/`ModelDownloadGate`).
+   - **Public demo** — open `?demo` on **any** browser (no RAM risk): tap a question → instant spoken answer, **no permission prompt**.
+
+2. **Phase 4 — weekly LoRA training:**
+   - **Research gate FIRST:** fill `docs/superpowers/phase-d-conversion-findings.md` — confirm the Gemma 4 LoRA → MediaPipe-web path (Vertex/Anti-gravity PEFT adapter → `converter.convert_checkpoint` → `lora.bin` → web `loadLoraModel` + `loraRanks`). **Nothing downstream is real until this passes.**
+   - **Then** build Phase D Tasks 3–5 per `docs/superpowers/plans/2026-05-21-voicememory-phase-d-training.md`: app-side LoRA hot-swap wiring, the Vertex Gemma 4 LoRA job + Anti-gravity weekly cron, the PEFT→`lora.bin` converter — then the end-to-end run (<$5, `lora.bin` <5MB, hot-swap without app restart).
+
+**Antigravity CLI context (Phase 4):** the project lives inside `~/Core/Workspace/AntigravityCLI/` (already an Antigravity project). Default to inheriting the parent registration — run `antigravity` from `~/Core/Workspace/AntigravityCLI/` and reference `voice-memory/` — rather than a separate `antigravity init`, unless you need isolation.
+
+**Known minor follow-ups (reviewer-approved, deferred):** revoke `URL.createObjectURL` in the timeline; guard overlapping `stt.start()`; drop the now-unused `inference` shim the demo carried; add a `Worker.onerror` drain to the LLM/STT clients.
 
 ## Decisions log (don't relitigate without reason)
 

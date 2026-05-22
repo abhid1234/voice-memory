@@ -8,9 +8,11 @@ class STTEngine {
   private audioContext: AudioContext | null = null;
   private stream: MediaStream | null = null;
   private analyser: AnalyserNode | null = null;
-  private currentModelName = 'Xenova/whisper-tiny.en';
+  private currentModelName = "Xenova/whisper-tiny.en";
   private mediaRecorder: MediaRecorder | null = null;
   private resolveAudioBlob: ((blob: Blob) => void) | null = null;
+  private chunks: Blob[] = [];
+  private partialTimer: ReturnType<typeof setInterval> | null = null;
 
   setWordModel(modelName: string) {
     if (this.currentModelName !== modelName) {
@@ -29,30 +31,30 @@ class STTEngine {
   preloadModel(
     modelName: string,
     onStatus?: (status: string) => void,
-    onProgress?: (file: string, progress: number) => void
+    onProgress?: (file: string, progress: number) => void,
   ) {
     this.setWordModel(modelName);
     if (!this.worker) {
-      onStatus?.('Initializing AI Worker...');
-      this.worker = new Worker(new URL('./whisper-worker.js', import.meta.url), {
-        type: 'module'
+      onStatus?.("Initializing AI Worker...");
+      this.worker = new Worker(new URL("./whisper-worker.js", import.meta.url), {
+        type: "module",
       });
-      this.worker.postMessage({ type: 'INIT', data: { modelName: this.currentModelName } });
-      
+      this.worker.postMessage({ type: "INIT", data: { modelName: this.currentModelName } });
+
       this.worker.onmessage = (e) => {
-        if (e.data.type === 'INIT_DONE') {
-          onStatus?.('AI Model Ready');
-          onProgress?.('', 100);
-        } else if (e.data.type === 'PROGRESS') {
+        if (e.data.type === "INIT_DONE") {
+          onStatus?.("AI Model Ready");
+          onProgress?.("", 100);
+        } else if (e.data.type === "PROGRESS") {
           const { file, progress } = e.data.data;
           onStatus?.(`Downloading AI Model (${file}): ${progress}%`);
           onProgress?.(file, progress);
-        } else if (e.data.type === 'ERROR') {
+        } else if (e.data.type === "ERROR") {
           onStatus?.(`Error: ${e.data.data}`);
         }
       };
       this.worker.onerror = (err) => {
-        onStatus?.(`Worker Load Error: ${err.message || 'Check browser console'}`);
+        onStatus?.(`Worker Load Error: ${err.message || "Check browser console"}`);
       };
     }
   }
@@ -60,63 +62,56 @@ class STTEngine {
   async start(
     onResult: (result: STTResult) => void,
     onStatus?: (status: string) => void,
-    onProgress?: (file: string, progress: number) => void
+    onProgress?: (file: string, progress: number) => void,
   ) {
+    this.chunks = [];
     if (!this.worker) {
-      onStatus?.('Initializing AI Worker...');
-      this.worker = new Worker(new URL('./whisper-worker.js', import.meta.url), {
-        type: 'module'
-      });
-      this.worker.postMessage({ type: 'INIT', data: { modelName: this.currentModelName } });
-      
+      this.preloadModel(this.currentModelName, onStatus, onProgress);
+    }
+
+    if (this.worker) {
       this.worker.onmessage = (e) => {
-        if (e.data.type === 'INIT_DONE') {
-          onStatus?.('AI Model Ready');
-          onProgress?.('', 100);
-        } else if (e.data.type === 'PROGRESS') {
+        if (e.data.type === "INIT_DONE") {
+          onStatus?.("AI Model Ready");
+          onProgress?.("", 100);
+        } else if (e.data.type === "PROGRESS") {
           const { file, progress } = e.data.data;
           onStatus?.(`Downloading AI Model (${file}): ${progress}%`);
           onProgress?.(file, progress);
-        } else if (e.data.type === 'RESULT') {
-          onStatus?.('Transcription Complete');
-          onResult({ text: e.data.data, isFinal: true });
-        } else if (e.data.type === 'ERROR') {
+        } else if (e.data.type === "ERROR") {
           onStatus?.(`Error: ${e.data.data}`);
         }
-      };
-
-      this.worker.onerror = (err) => {
-        onStatus?.(`Worker Load Error: ${err.message || 'Check browser console'}`);
       };
     }
 
     try {
-      onStatus?.('Requesting Microphone...');
+      onStatus?.("Requesting Microphone...");
       this.audioContext = new AudioContext({ sampleRate: 16000 });
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       const source = this.audioContext.createMediaStreamSource(this.stream);
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 64;
       source.connect(this.analyser);
 
-      onStatus?.('Recording...');
-    
+      onStatus?.("Recording...");
       this.mediaRecorder = new MediaRecorder(this.stream);
-      const chunks: Blob[] = [];
-      this.mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          this.chunks.push(e.data);
+        }
+      };
+
       this.mediaRecorder.onstop = async () => {
-        onStatus?.('Processing Audio...');
-        
-        // Stop stream tracks inside onstop to avoid truncating audio capture
+        onStatus?.("Processing Audio...");
         if (this.stream) {
-          this.stream.getTracks().forEach(t => t.stop());
+          this.stream.getTracks().forEach((t) => t.stop());
           this.stream = null;
         }
         this.analyser = null;
 
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        
+        const blob = new Blob(this.chunks, { type: "audio/webm" });
+
         if (this.resolveAudioBlob) {
           this.resolveAudioBlob(blob);
           this.resolveAudioBlob = null;
@@ -126,15 +121,60 @@ class STTEngine {
           const arrayBuffer = await blob.arrayBuffer();
           const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
           const float32Data = audioBuffer.getChannelData(0);
-          
-          onStatus?.('Transcribing...');
-          this.worker?.postMessage({ type: 'TRANSCRIBE', data: { audio: float32Data } });
+
+          if (this.worker) {
+            const originalOnMessage = this.worker.onmessage;
+            this.worker.onmessage = (e) => {
+              if (e.data.type === "RESULT") {
+                onStatus?.("Transcription Complete");
+                onResult({ text: e.data.data, isFinal: true });
+                this.worker!.onmessage = originalOnMessage;
+              } else if (e.data.type === "ERROR") {
+                onStatus?.(`Error: ${e.data.data}`);
+                this.worker!.onmessage = originalOnMessage;
+              } else if (originalOnMessage) {
+                originalOnMessage.call(this.worker!, e);
+              }
+            };
+            onStatus?.("Transcribing...");
+            this.worker.postMessage({ type: "TRANSCRIBE", data: { audio: float32Data } });
+          }
         } catch (err) {
           onStatus?.(`Decoding/Transcribing Error: ${err}`);
         }
       };
 
-      this.mediaRecorder.start();
+      this.mediaRecorder.start(1000);
+
+      // Live partial transcription every 8 seconds
+      this.partialTimer = setInterval(async () => {
+        if (!this.mediaRecorder || this.mediaRecorder.state !== "recording") return;
+        try {
+          if (this.chunks.length > 0 && this.audioContext) {
+            const blob = new Blob(this.chunks, { type: "audio/webm" });
+            const buf = await blob.arrayBuffer();
+            const decoded = await this.audioContext.decodeAudioData(buf.slice(0));
+            const float32Data = decoded.getChannelData(0);
+
+            if (this.worker) {
+              const originalOnMessage = this.worker.onmessage;
+              this.worker.onmessage = (e) => {
+                if (e.data.type === "RESULT") {
+                  onResult({ text: e.data.data, isFinal: false });
+                  this.worker!.onmessage = originalOnMessage;
+                } else if (e.data.type === "ERROR") {
+                  this.worker!.onmessage = originalOnMessage;
+                } else if (originalOnMessage) {
+                  originalOnMessage.call(this.worker!, e);
+                }
+              };
+              this.worker.postMessage({ type: "TRANSCRIBE", data: { audio: float32Data } });
+            }
+          }
+        } catch {
+          // Mid-stream decode can fail; ignore and retry next interval
+        }
+      }, 8000);
     } catch (err) {
       onStatus?.(`Error: ${err}`);
       throw err;
@@ -145,31 +185,31 @@ class STTEngine {
     float32Data: Float32Array,
     onResult: (result: STTResult) => void,
     onStatus?: (status: string) => void,
-    onProgress?: (file: string, progress: number) => void
+    onProgress?: (file: string, progress: number) => void,
   ) {
     if (!this.worker) {
       this.preloadModel(this.currentModelName, onStatus, onProgress);
     }
-    
+
     if (this.worker) {
       const originalOnMessage = this.worker.onmessage;
       this.worker.onmessage = (e) => {
-        if (e.data.type === 'RESULT') {
-          onStatus?.('Transcription Complete');
+        if (e.data.type === "RESULT") {
+          onStatus?.("Transcription Complete");
           onResult({ text: e.data.data, isFinal: true });
           this.worker!.onmessage = originalOnMessage;
-        } else if (e.data.type === 'ERROR') {
+        } else if (e.data.type === "ERROR") {
           onStatus?.(`Error: ${e.data.data}`);
           this.worker!.onmessage = originalOnMessage;
         } else if (originalOnMessage) {
           originalOnMessage.call(this.worker!, e);
         }
       };
-      
-      onStatus?.('Transcribing...');
-      this.worker.postMessage({ type: 'TRANSCRIBE', data: { audio: float32Data } });
+
+      onStatus?.("Transcribing...");
+      this.worker.postMessage({ type: "TRANSCRIBE", data: { audio: float32Data } });
     } else {
-      onStatus?.('AI worker failed to initialize');
+      onStatus?.("AI worker failed to initialize");
     }
   }
 
@@ -178,15 +218,23 @@ class STTEngine {
   }
 
   async stop(): Promise<Blob | undefined> {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+    if (this.partialTimer) {
+      clearInterval(this.partialTimer);
+      this.partialTimer = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
       const blobPromise = new Promise<Blob>((resolve) => {
         this.resolveAudioBlob = resolve;
       });
       this.mediaRecorder.stop();
-      return blobPromise;
+      const blob = await blobPromise;
+      if (this.audioContext) {
+        await this.audioContext.close();
+        this.audioContext = null;
+      }
+      return blob;
     }
   }
 }
 
 export const stt = new STTEngine();
-
