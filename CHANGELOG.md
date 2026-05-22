@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [0.0.0.2] - 2026-05-22
 
 ### Added
-- **Phase 4 Training & Conversion Scaffolding**: Causal LM training JSONL serializers, MediaPipe adapter dynamic loading in web workers, weekly cron execution configuration, and conversion script to compile TFLite adapters.
-- **Inference Worker Error Draining**: Worker `onerror` boundary to drain pending tasks cleanly on worker crash.
+- **Phase 4 Training & Conversion Scaffolding**: Groundwork for weekly Gemma 4 personalization. Added causal LM training JSONL serializers, MediaPipe adapter dynamic loading in web workers, weekly cron execution configuration, and a Python conversion script to compile TFLite adapters (`lora.bin`).
+- **Inference Worker Error Draining**: Cleanly drains pending tasks and prevents UI hangs if the background inference worker crashes.
 
 ### Fixed
-- **Resource Leaks**: AudioContext lifecycle closure on file import, unmount, and playback completion. Revocation of Object URLs in markdown and plain text export handlers.
-- **Concurrent Recording Safeguards**: Added recording state toggle guards to prevent concurrent microphone activations.
-- **Legacy Wrapper Cleanup**: Removed deprecated compatibility helper from `inference.ts`.
+- **Resource Leaks**: Resolved audio and memory leaks by managing AudioContext lifecycle on file import, unmount, and playback completion, and revoking temporary Object URLs in export handlers.
+- **Concurrent Recording Safeguards**: Added recording state toggle guards to prevent accidental concurrent microphone activations.
+- **Legacy Wrapper Cleanup**: Cleaned up the codebase by removing the deprecated compatibility helper from `inference.ts`.
 
 ## [0.0.0.1] - 2026-05-22
 

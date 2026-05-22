@@ -32,32 +32,34 @@ Project I in Abhi's `RL & Agentic AI Project Pipeline` tracker. Direct response 
 ```
 voice-memory/
 ├── docs/
-│   └── spec.md                   # full v1 spec, scope tradeoffs, phase plan
-├── app/                          # PWA (Phase 1)
+│   ├── spec.md                     # Full v1 spec, scope tradeoffs, phase plan
+│   ├── demo-video-script.md        # Video walkthrough script
+│   └── superpowers/
+│       └── phase-d-conversion-findings.md  # LoRA conversion findings & signatures
+├── app/                            # Vite PWA
 │   ├── src/
-│   │   ├── record/               # capture flow + Whisper.cpp STT
-│   │   ├── query/                # voice query + RAG over IndexedDB
-│   │   ├── timeline/             # browse captures
-│   │   └── inference/            # MediaPipe Gemma 4 wrapper
-│   ├── public/
-│   │   └── manifest.json         # PWA manifest, Add-to-Home-Screen
-│   └── sw.js                     # service worker for offline
-├── training/                     # Anti-gravity pipeline (Phase 4)
-│   ├── agent-config.yaml         # weekly cron + LoRA job definition
-│   └── lora-export.ts            # pack quantized LoRA for phone shipment
-├── public-demo/                  # ondeviceml.space lane (Phase 5)
-│   ├── synthetic-memory.json     # pre-loaded fake AI industry conversations
-│   └── sample-queries.json       # tap-to-query buttons
-└── package.json
+│   │   ├── components/             # Reusable UI elements (ModelDownloadGate.tsx, etc.)
+│   │   ├── pages/                  # Page routes (Demo.tsx, etc.)
+│   │   ├── lib/                    # Logic modules (stt, inference, rag, storage, synth, flow, diff)
+│   │   ├── data/                   # Synthetic demo dataset & questions
+│   │   ├── App.tsx                 # Core layout, state, routing, and screens
+│   │   └── App.css                 # Ethereal design system styles and layout
+│   ├── public/                     # Static assets, Web Workers (whisper-worker.js, manifest.json, sw.js)
+│   └── package.json
+└── infra/                          # Weekly Vertex LoRA training pipeline
+    ├── agent-config.yaml           # Anti-gravity 2.0 cron & job details
+    ├── train_config.yaml           # LoRA training configuration
+    ├── convert_lora.py             # Script to compile TFLite adapters (lora.bin)
+    └── deploy_pipeline.py          # Script to deploy/trigger pipeline
 ```
 
 **Stack:**
-- PWA: Next.js or Vite + service worker + IndexedDB storage
-- STT: Whisper.cpp (WASM) or transformers.js whisper-small
+- PWA: React + TypeScript + Vite + service worker + IndexedDB storage
+- STT: Whisper.cpp (WASM) web worker integration
 - Inference: MediaPipe `tasks-genai` for Gemma 4 quantized on-device
-- TTS: browser Web Speech API (free, on-device) or piper.wasm
-- Training: Anti-gravity CLI → Vertex AI LoRA fine-tune → quantized LoRA shipped via signed URL
-- Storage: IndexedDB on phone (note: iOS Safari may purge after ~7d non-use; mitigation TBD)
+- TTS: browser Web Speech API (free, on-device)
+- Training: Anti-gravity CLI -> Vertex AI LoRA fine-tune -> quantized LoRA shipped via signed URL
+- Storage: IndexedDB on phone
 
 ## Open design questions resolved by D2
 
@@ -67,14 +69,16 @@ All 4 from the spec are now answered:
 3. Anti-gravity free tier + ~$3/wk Vertex (Q3)
 4. Synthetic AI-industry conversations for public demo (Q4)
 
-## Common commands (Phase 1+ will populate)
+## Common commands
+
+All development and test commands are run from the frontend directory:
 
 ```bash
-npm install              # Phase 1 setup
-npm run dev              # local PWA dev server
-npm test                 # vitest
-npm run build            # production PWA bundle
-# Anti-gravity CLI commands TBD (Phase 4)
+cd app
+npm install              # Setup project dependencies
+npm run dev              # Launch local PWA dev server
+npm test                 # Run vitest unit tests
+npm run build            # Compile production PWA bundle
 ```
 
 ## How to work with Abhi
