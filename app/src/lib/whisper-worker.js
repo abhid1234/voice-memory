@@ -4,11 +4,19 @@ import { pipeline, env } from '@xenova/transformers';
 env.allowLocalModels = false;
 
 let transcriber = null;
+let currentModel = null;
 
-async function init() {
-  if (transcriber) return;
+async function init(modelName = 'Xenova/whisper-tiny.en') {
+  if (transcriber && currentModel === modelName) {
+    self.postMessage({ type: 'INIT_DONE' });
+    return;
+  }
+  
+  transcriber = null;
+  currentModel = modelName;
+  
   try {
-    transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+    transcriber = await pipeline('automatic-speech-recognition', modelName, {
       progress_callback: (progress) => {
         if (progress.status === 'progress') {
           self.postMessage({ 
@@ -35,7 +43,7 @@ self.onmessage = async (e) => {
   const { type, data } = e.data;
   
   if (type === 'INIT') {
-    await init();
+    await init(data?.modelName);
   } else if (type === 'TRANSCRIBE') {
     if (!transcriber) {
       self.postMessage({ type: 'ERROR', data: 'Transcriber not initialized' });
