@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { stt } from './lib/stt'
+import { embed } from './lib/embeddings'
 import { saveMemo, getAllMemos } from './lib/storage'
 import type { VoiceMemo } from './lib/storage'
 import { retrieveRelevantContext } from './lib/rag'
@@ -31,14 +32,17 @@ function App() {
 
   const handleRecordToggle = async () => {
     if (isRecording) {
-      const audioBlob = await stt.stop()
+      const { transcript, audioBlob } = await stt.stop()
       setIsRecording(false)
-      
-      if (currentTranscript.trim()) {
+      setCurrentTranscript(transcript)
+
+      if (transcript) {
+        const embedding = await embed(transcript)
         await saveMemo({
           timestamp: Date.now(),
-          transcript: currentTranscript.trim(),
-          audioBlob
+          transcript,
+          embedding,
+          audioBlob,
         })
         loadHistory()
       }
@@ -152,6 +156,13 @@ function App() {
                     {new Date(memo.timestamp).toLocaleTimeString()}
                   </span>
                   <p className="memo-text">{memo.transcript}</p>
+                  {memo.audioBlob && (
+                    <audio
+                      className="memo-audio"
+                      controls
+                      src={URL.createObjectURL(memo.audioBlob)}
+                    />
+                  )}
                 </div>
               ))
             )}
