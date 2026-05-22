@@ -2354,7 +2354,7 @@ function TimelineAudioPlayer({ audioBlob }: { audioBlob: Blob }) {
       if (sourceNodeRef.current) {
         try {
           sourceNodeRef.current.stop();
-        } catch (e) {
+        } catch {
           // ignore if already stopped
         }
       }
@@ -2372,7 +2372,7 @@ function TimelineAudioPlayer({ audioBlob }: { audioBlob: Blob }) {
       if (sourceNodeRef.current) {
         try {
           sourceNodeRef.current.stop();
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

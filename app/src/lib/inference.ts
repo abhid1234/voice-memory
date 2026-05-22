@@ -4,7 +4,7 @@ import { fallbackPolish, fallbackInsights } from "./flow";
 export interface LlmWorkerLike {
   postMessage(message: unknown): void;
   onmessage: ((ev: { data: unknown }) => void) | null;
-  onerror?: ((ev: any) => void) | null;
+  onerror?: ((ev: unknown) => void) | null;
 }
 
 type Pending = {
@@ -27,7 +27,7 @@ export class InferenceClient {
       this.worker.onerror = (err) => {
         console.error("Inference worker error encountered:", err);
         const message = (err && typeof err === "object" && "message" in err) 
-          ? String((err as any).message) 
+          ? String((err as { message?: unknown }).message)
           : String(err);
         this.drainPending(new Error(message || "Worker runtime exception"));
       };

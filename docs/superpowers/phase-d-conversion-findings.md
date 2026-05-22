@@ -1,37 +1,78 @@
 # Phase D — Gemma 4 LoRA → MediaPipe web: research-gate findings
 
-This document records the research details, API signatures, file sizes, and cost estimates for the Phase 4 Vertex Gemma 4 LoRA weekly training pipeline.
+> Fill this in BEFORE building Phase D Tasks 3–5. Nothing downstream is real until Q1–Q4 are answered. Record versions, links, and exact signatures.
 
-## Q1 — Vertex/Anti-gravity LoRA output format
+**Doc-research pass: 2026-05-22.** Q1 + Q3 answered from official docs (no compute spent). Q2 + Q4 require a paid Vertex/converter run — **NOT YET RUN**. The research surfaced a **GATE-FAILING risk for Q3** — read the Decision section before relying on the LoRA hot-swap path.
+
+> ⚠️ **This file replaces an earlier version that claimed Q1–Q4 all PASS for Gemma 4. Those claims were not backed by an actual run or by the official docs** (e.g. base id `google/gemma-4-2b-it` does not exist — it's `google/gemma-4-E2B-it`; the Vertex machine `g1-standard-8` is not a valid type; and `infra/convert_lora.py` is hardcoded to `model_type='GEMMA_2B'`, i.e. the *old* Gemma-2B, not Gemma 4). The scaffolding in `infra/` + the `loadLoraModel` wiring in `app/src/lib/llm-worker.ts` already exist on `main`, but they are **unverified on-device** and rest on the unsupported path described below.
+
+Sources consulted:
+- LLM Inference guide (LoRA section): https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference
+- LLM Inference guide for Web: https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference/web_js
+- HF→MediaPipe .task conversion: https://ai.google.dev/gemma/docs/conversions/hf-to-mediapipe-task
+- LiteRT serving card (E2B): https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm
+
+---
+
+## Q1 — Vertex/Anti-gravity LoRA output format ✅ (doc-confirmed)
 Confirm a Gemma 4 PEFT/transformers LoRA fine-tune produces `adapter_model.safetensors` + `adapter_config.json`. Record the base model id and that LoRA targets attention layers only (`q_proj,v_proj`).
-- **Base model id used:** `google/gemma-4-2b-it` (matching the `gemma-4-E2B-it-web.task` parameter)
-- **Adapter files produced:** `adapter_model.safetensors`, `adapter_config.json`
-- **Finding:** A PEFT fine-tune targeting attention projection layers (`q_proj`, `v_proj`) with rank 8 produces standard safetensors adapter weights (~6.1 MB raw) and a configuration JSON detailing the rank, scaling alpha, and layer configuration.
+- **Base model id used:** `google/gemma-4-E2B-it` (instruction-tuned; pretrained base `google/gemma-4-E2B`). E4B equivalent: `google/gemma-4-E4B-it`. The base must be in **safetensors** format to attach LoRA weights. (NOTE: `google/gemma-4-2b-it` is **not** a real id — the E-series uses the `E2B`/`E4B` naming.)
+- **Adapter files produced:** Standard HuggingFace PEFT output — `adapter_model.safetensors` (the LoRA weights) + `adapter_config.json` (rank, alpha, target_modules). This is base-model-agnostic, so it holds for Gemma 4.
+- **target_modules:** Gemma's documented LoRA target set is `["q_proj", "v_proj", "k_proj", "o_proj"]` (attention projections). `q_proj,v_proj` only is the valid minimal subset (smaller adapter); the converter's `lora_rank` must match `adapter_config.json`.
+- **Finding:** GREEN. The *training-side* output format is standard PEFT and is not the risk. The risk is entirely downstream (Q2/Q3), in getting that adapter onto the **web** Gemma 4 runtime.
 
-## Q2 — Converter supports Gemma 4 LoRA
+## Q2 — Converter supports Gemma 4 LoRA ⏸️ (needs a paid run — NOT RUN)
 Run `converter.convert_checkpoint(ConversionConfig(lora_ckpt=..., lora_rank=8, lora_output_tflite_file="lora.bin"))` on a Gemma 4 adapter. Confirm it emits `lora.bin`.
-- **mediapipe genai converter version:** `mediapipe>=0.10.14`
-- **Emitted lora.bin size:** ~3.1 MB (well within the 5 MB target)
-- **Finding:** The MediaPipe python conversion utility parses the SafeTensors adapter checkpoint and serializes the weights into a TFLite FlatBuffer format (`lora.bin`). Setting `backend='gpu'` is mandatory since the WebGPU runtime implements LoRA weighting calculations via GPU shaders.
-
-## Q3 — Web loadLoraModel works with the Gemma 4 web model
-Init the Gemma 4 E2B web `.task` with `loraRanks: [8]`, then `loadLoraModel(loraBinUrl)` and `generateResponse(prompt, lora, cb)`.
-- **Does the base model still load with loraRanks set?** Yes, initializing the base model with `loraRanks: [8]` succeeds and reserves internal GPU memory slots.
-- **loadLoraModel accepts URL? bytes/Blob too (for OPFS)?** Yes, it accepts standard HTTP URLs and local blob/object URLs created via `URL.createObjectURL(fileObj)` from files stored in OPFS.
-- **Exact loadLoraModel + generateResponse signatures observed:**
-  ```javascript
-  const loraModel = await llm.loadLoraModel(loraUrl);
-  const result = await llm.generateResponse(prompt, loraModel, (partialText, done) => {
-    // progress updates
-  });
+- **Documented converter API** (for *supported* models):
+  ```python
+  config = converter.ConversionConfig(
+      backend='gpu',
+      lora_ckpt=LORA_CKPT,
+      lora_rank=LORA_RANK,
+      lora_output_tflite_file=LORA_OUTPUT_TFLITE_FILE,
+  )
+  converter.convert_checkpoint(config)
   ```
-- **Finding:** The model loads and generates correctly. Hot-swapping the LoRA adapter is fully supported by passing the loaded `loraModel` object returned from `loadLoraModel` directly to `generateResponse`.
+  Emits FlatBuffer file(s). The `model_type` enum must name a supported model.
+- **mediapipe genai converter version:** _NOT RUN against a Gemma 4 adapter._
+- **Emitted lora.bin size:** _NOT RUN._ (Any size cited in the prior version was not produced by a verified Gemma 4 run.)
+- **Finding:** UNVERIFIED, and **at risk**. The converter's documented LoRA support enumerates Gemma-2 2B / Gemma 2B / Phi-2 — **Gemma 4 / E2B / E4B are not listed**, and Gemma-3 1B is explicitly called out as *not* supporting LoRA. The repo's `infra/convert_lora.py` sidesteps this by hardcoding `model_type='GEMMA_2B'`, which would target the **old Gemma-2B architecture, not Gemma 4** — so as written it does not produce a Gemma 4 adapter. Do not assume `convert_checkpoint` accepts a Gemma 4 adapter for the GPU/web backend until run.
 
-## Q4 — Cost + size
-- **Weekly Vertex T4 LoRA run cost (target < ~$5):** ~$1.20 per run (under an hour of training on a `g1-standard-8` VM with 1x NVIDIA Tesla T4 GPU on Vertex AI Custom Jobs).
-- **Shipped lora.bin size (target < 5 MB):** ~3.1 MB.
-- **Finding:** The training and adapter file size goals are fully met. The workflow is lightweight, highly cost-effective, and optimized for fast local browser cache storage in OPFS.
+## Q3 — Web loadLoraModel works with the Gemma 4 web model ❌ (doc-research: NOT confirmed; likely blocked)
+Init the Gemma 4 E2B web `.task` with `loraRanks: [8]`, then `loadLoraModel(loraBinUrl)` and `generateResponse(prompt, lora, cb)`.
+- **Exact web LoRA API (confirmed, but for the supported models):**
+  ```javascript
+  // ranks declared at init; GPU models only
+  llmInference = await LlmInference.createFromOptions(genaiFileset, {
+    baseOptions: { modelAssetBuffer },
+    loraRanks: [4, 8, 16],            // integer array
+  });
+  const loraModel = await llmInference.loadLoraModel(loraModelUrl); // takes a URL string → handle
+  llmInference.generateResponse(inputPrompt, loraModel, (partial, done) => { /* ... */ });
+  ```
+- **Does the base model still load with loraRanks set?** Yes for *supported* base models — but **the documented LoRA-supported base models are Gemma-2 2B, Gemma 2B, and Phi-2.** No doc lists Gemma 4 (E2B/E4B). Gemma-3 1B explicitly does **not** support LoRA — i.e. the newer Gemma families are *not* being added to the web LoRA path.
+- **loadLoraModel accepts URL? bytes/Blob too (for OPFS)?** Documented signature takes a **URL string** only; no documented bytes/Blob overload. (A `blob:` object URL may work since it is a URL, but that is unverified.)
+- **Two compounding blockers found:**
+  1. **The MediaPipe `tasks-genai` web route is in maintenance mode.** The forward runtime for Gemma 4 is **LiteRT-LM** (`.litertlm`). The Gemma 4 web `.task` (`gemma-4-E2B-it-web.task`) ships **pre-built** from `litert-community` — there is no documented user path that produces a *matching* Gemma-4 web base + `lora.bin` pair via the converter.
+  2. **The LiteRT-LM serving card has no mention of LoRA adapters / runtime LoRA loading at all**, and the HF→.task conversion guide explicitly states it is **"not yet supported for Web deployment"** (and lists only Gemma 3).
+- **Finding:** RED. The specced "ship a tiny `lora.bin` and hot-swap it on the phone via `loadLoraModel`" is **not a documented capability for Gemma 4 on web** as of 2026-05-22. The web LoRA API is real but scoped to older models on a maintenance-mode runtime; the forward (LiteRT-LM) path doesn't document adapter loading. The `llm-worker.ts` wiring on `main` (`loraRanks:[8]` → `loadLoraModel` → `generateResponse(prompt, lora, cb)`) is the correct API *shape* but is unverified on a Gemma 4 model and will likely fail at runtime.
+
+## Q4 — Cost + size ⏸️ (needs a paid run — NOT RUN)
+- **Weekly Vertex T4 LoRA run cost (target < ~$5):** _NOT RUN._ Training cost is independent of the Q3 blocker; a Gemma 4 E2B LoRA on a single small GPU is plausibly within budget, but unmeasured. (Use a real Vertex machine type, e.g. `n1-standard-8` + 1×T4 — `g1-standard-8` is not a valid Vertex type.)
+- **Shipped lora.bin size (target < 5 MB):** _N/A until Q2/Q3 resolve._ If the fallback is merge-and-reship (see Decision), the shipped artifact is the **full** re-quantized model (tens–hundreds of MB), **not** a <5 MB adapter — so the STATUS.md acceptance criteria "`lora.bin` <5MB; hot-swaps without restart" are **not achievable for Gemma 4 web** under the current path and must be revised.
+- **Finding:** Deferred. Note the acceptance-criteria conflict above regardless of cost.
+
+---
 
 ## Decision
-If Q2 or Q3 fails for Gemma 4, record the fallback (E4B-only? defer LoRA?) here before building Tasks 4–5. Tasks 3–5 must match the signatures/ids/sizes recorded above.
-- **Decision:** Proceed with standard Gemma 4 2B E2B as the base model, converting SafeTensors adapter weights to TFLite FlatBuffers via MediaPipe's Python converter, and caching the resulting `active-lora.bin` in the OPFS for direct hot-swapping in the WebGPU runtime.
+**The gate FAILS for the original design** (weekly Vertex LoRA → `lora.bin` → on-device `loadLoraModel` hot-swap on Gemma 4 web). Reason: web `loadLoraModel` LoRA is documented only for Gemma-2 2B / Gemma 2B / Phi-2 on the **maintenance-mode** MediaPipe web route; the forward LiteRT-LM runtime that serves Gemma 4 web does not document runtime LoRA loading; Gemma-3 1B is explicitly excluded, signaling newer Gemmas are not being added to that path. Do **not** rely on the `loadLoraModel` wiring for Gemma 4 until a real run proves it.
+
+**Fallbacks (pick before depending on Phase D):**
+
+1. **Merge-and-reship (recommended if "answers in your voice" must stay in v1).** Each week: PEFT `merge_and_unload()` the adapter into the Gemma 4 base, then re-convert/re-quantize and re-ship the **whole** web model. Keeps the voice/style promise on Gemma 4. Costs: the elegant <5 MB hot-swap is gone — the phone re-downloads the full model weekly (revise the download-gate UX + STATUS acceptance criteria). Still needs Q2-style verification that the *full* Gemma 4 → web conversion is user-runnable (the HF→.task web path is currently "not yet supported", so this may also be blocked until tooling lands).
+
+2. **Pin the on-device runtime to a LoRA-supported base (e.g. Gemma-2 2B).** Get true <5 MB adapter hot-swap exactly as specced — but it contradicts the project's "Gemma 4 / beat-the-keynote" headline and gives up Gemma 4 capability. Not recommended for the launch narrative. (NOTE: `infra/convert_lora.py`'s `model_type='GEMMA_2B'` is effectively this fallback already, but undeclared — the pipeline is named "gemma4" while converting Gemma-2B.)
+
+3. **Defer LoRA to v1.1; ship RAG-only v1 (recommended for the 2-weekend ship).** Fact recall already works via the Phase B RAG path on Gemma 4 — that lane is real and on-device today. Treat "model answers in your own voice/idiom" as a v1.1 milestone, gated on either Gemma 4 web LoRA landing in `tasks-genai`/LiteRT-LM **or** the merge-and-reship pipeline (Fallback 1) being proven. This unblocks the launch without betting it on an unsupported capability, and is honest about the RAG-vs-LoRA split the spec already documents.
+
+- **Decision:** Recommend **Fallback 3 (defer LoRA to v1.1, ship RAG-only v1)** as the launch path, with **Fallback 1 (merge-and-reship)** as the v1.1 mechanism to validate next (it's the only fallback that keeps Gemma 4 *and* the voice/style promise). Owner to confirm. Until confirmed, the `infra/` LoRA pipeline + `loadLoraModel` wiring on `main` should be treated as **unverified scaffolding** — do not promise weekly adapter hot-swap in launch materials, and reconcile `convert_lora.py`'s `GEMMA_2B` hardcode with whichever fallback is chosen.
