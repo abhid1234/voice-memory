@@ -45,15 +45,27 @@ export async function isModelCached(variant: GemmaVariant): Promise<boolean> {
   }
 }
 
-/** Download the model to OPFS once (streamed, with progress). No-op if already cached. */
+/**
+ * Download the model to OPFS once (streamed, with progress). No-op if already cached.
+ *
+ * Writes to a temporary `.partial` file and only renames it to the final name once the
+ * full stream has been written and the writable closed. `isModelCached` checks the FINAL
+ * name, so a download interrupted by a crash, tab close, or navigation away can never be
+ * mistaken for a complete model — the final name simply won't exist yet, and the next run
+ * re-downloads. (The catch below also cleans up on a caught error; the rename guards the
+ * abrupt-termination case the catch cannot.)
+ */
 export async function downloadModel(
   variant: GemmaVariant,
   onProgress?: (p: DownloadProgress) => void,
 ): Promise<void> {
   if (await isModelCached(variant)) return
   const { url, file } = GEMMA_VARIANTS[variant]
+  const tempName = `${file}.partial`
   const dir = await modelDir()
-  const handle = await dir.getFileHandle(file, { create: true })
+  // Clear any leftover partial from a previously aborted download before starting fresh.
+  await dir.removeEntry(tempName).catch(() => {})
+  const handle = await dir.getFileHandle(tempName, { create: true })
   const writable = await handle.createWritable()
   try {
     const res = await fetch(url)
@@ -69,14 +81,16 @@ export async function downloadModel(
       onProgress?.({ loadedBytes, totalBytes })
     }
     await writable.close()
+    // Atomically promote the completed temp file to the final name. Only now is the model
+    // considered "cached"; a crash before this line leaves only the `.partial` temp.
+    await (handle as unknown as { move(name: string): Promise<void> }).move(file)
   } catch (e) {
-    // Don't leave a truncated file that isModelCached() would later treat as complete.
     try {
       await writable.close()
     } catch {
       /* already errored */
     }
-    await dir.removeEntry(file).catch(() => {})
+    await dir.removeEntry(tempName).catch(() => {})
     throw e
   }
 }
