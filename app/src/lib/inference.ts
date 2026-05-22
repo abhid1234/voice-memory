@@ -16,6 +16,7 @@ export class InferenceClient {
   private nextId = 1;
   private pending = new Map<number, Pending>();
   private worker: LlmWorkerLike;
+  private initPromise: Promise<void> | null = null;
   private ready = false;
 
   constructor(worker: LlmWorkerLike) {
@@ -32,6 +33,13 @@ export class InferenceClient {
     };
     if (msg.type === "READY") {
       this.ready = true;
+      if (msg.id != null) {
+        const p = this.pending.get(msg.id);
+        if (p) {
+          this.pending.delete(msg.id);
+          p.resolve("");
+        }
+      }
       return;
     }
     if (msg.id == null) return;
@@ -48,8 +56,27 @@ export class InferenceClient {
     }
   }
 
-  init(variant: GemmaVariant) {
-    if (!this.ready) this.worker.postMessage({ type: "INIT", variant });
+  /**
+   * Load the model in the worker. Resolves on READY, rejects if init fails so
+   * callers can surface it. Idempotent while in flight; a failed init clears so
+   * a later call retries the load.
+   */
+  init(variant: GemmaVariant): Promise<void> {
+    if (this.initPromise) return this.initPromise;
+    const id = this.nextId++;
+    this.initPromise = new Promise<void>((resolve, reject) => {
+      this.pending.set(id, {
+        resolve: () => resolve(),
+        reject: (e) => {
+          this.initPromise = null;
+          this.ready = false;
+          reject(e);
+        },
+        onToken: () => {},
+      });
+      this.worker.postMessage({ type: "INIT", id, variant });
+    });
+    return this.initPromise;
   }
 
   generateResponse(
