@@ -121,6 +121,15 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 function App() {
   const isDemoMode = window.location.hostname.includes('voicememory') || window.location.search.includes('demo')
   const [activeTab, setActiveTab] = useState<'dictation' | 'memories' | 'timeline' | 'query' | 'vault' | 'demo'>(isDemoMode ? 'demo' : 'dictation')
@@ -159,7 +168,16 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
   });
-  const [, setDummyState] = useState(0);
+  const [selectedModel, setSelectedModel] = useState(() => stt.getCurrentModel());
+
+  const allUniqueTags = useMemo(() => {
+    return Array.from(new Set(history.flatMap(memo => memo.tags || [])));
+  }, [history]);
+
+  const draftWordCount = useMemo(() => {
+    return editableDraft.split(/\s+/).filter(Boolean).length;
+  }, [editableDraft]);
+
   const phaseRef = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -185,6 +203,15 @@ function App() {
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [undoMemo, setUndoMemo] = useState<VoiceMemo | null>(null);
   const undoTimeoutRef = useRef<number | null>(null);
+
+  // Cleanup undo timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current) {
+        clearTimeout(undoTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Backup & Restore file input ref
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -497,7 +524,9 @@ function App() {
           }
         }
       }
-      animationFrameId = requestAnimationFrame(updateVolumeVisualizer);
+      if (isRecording) {
+        animationFrameId = requestAnimationFrame(updateVolumeVisualizer);
+      }
     };
 
     if (isRecording) {
@@ -670,8 +699,13 @@ function App() {
           for (const req of requests) {
             const res = await cache.match(req);
             if (res) {
-              const blob = await res.blob();
-              totalSize += blob.size;
+              const contentLength = res.headers.get('content-length');
+              if (contentLength) {
+                totalSize += parseInt(contentLength, 10);
+              } else {
+                const blob = await res.blob();
+                totalSize += blob.size;
+              }
             }
           }
         }
@@ -703,11 +737,6 @@ function App() {
       setStatusText('Database wipe failed');
     }
   };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchStorageMetrics();
-  }, [activeTab]);
 
   const clearAppCaches = async () => {
     if (!confirm('Are you sure you want to delete all cached models? They will have to be redownloaded next time you record.')) return;
@@ -802,7 +831,11 @@ function App() {
       const audioBlob = await stt.stop()
       setIsRecording(false)
       setLastAudioBlob(audioBlob)
-      setStatusText('Transcribing audio on-device...');
+      if (audioBlob) {
+        setStatusText('Transcribing audio on-device...');
+      } else {
+        setStatusText('Recording stopped (no audio captured)');
+      }
     } else {
       playRecordStartSound();
       window.speechSynthesis.cancel()
@@ -1007,7 +1040,7 @@ function App() {
             <img src="/sleek-logo.png" className="sidebar-logo" alt="logo" style={{ height: '28px' }} />
             <span className="sidebar-title" style={{ fontWeight: 700, fontSize: '1.3rem', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
-          <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)}>✕</button>
+          <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar">✕</button>
         </div>
         
         <nav className="sidebar-nav" id="tour-header-nav">
@@ -1129,6 +1162,8 @@ function App() {
                   <button 
                     className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
                     onClick={handleRecordToggle}
+                    aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
+                    aria-pressed={isRecording}
                   >
                     <span className="icon-mic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg style={{ width: '24px', height: '24px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
@@ -1302,7 +1337,7 @@ function App() {
                                 <div 
                                   className="insights-markdown" 
                                   dangerouslySetInnerHTML={{ 
-                                    __html: draftInsights
+                                    __html: escapeHtml(draftInsights)
                                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                                       .replace(/\n/g, '<br/>') 
                                   }} 
@@ -1330,7 +1365,7 @@ function App() {
                 
                 <div className="sheet-footer">
                   <span className="footer-meta">Casing corrections: {dictionaryTags.length} loaded</span>
-                  <span className="footer-meta">Words: {(editableDraft.split(/\s+/).filter(Boolean).length)}</span>
+                  <span className="footer-meta">Words: {draftWordCount}</span>
                 </div>
               </div>
             </div>
@@ -1443,15 +1478,15 @@ function App() {
                   <label className="input-label">Whisper Model Weight:</label>
                   <select 
                     className="model-select-dropdown"
-                    value={stt.getCurrentModel()}
+                    value={selectedModel}
                     onChange={(e) => {
                       const selected = e.target.value;
+                      setSelectedModel(selected);
                       stt.preloadModel(selected, setStatusText, (file, prog) => {
                         setDownloadProgress(prog);
                         setDownloadingFile(file);
                       });
                       setStatusText(`Switched AI Model to ${selected}`);
-                      setDummyState(prev => prev + 1);
                     }}
                   >
                     <option value="Xenova/whisper-tiny.en">Tiny.en (~75MB - Ultra-fast)</option>
@@ -1480,7 +1515,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-color)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={openDoctor}
                     >
                       🩺 Engine Doctor
@@ -1488,7 +1523,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-color)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={handleExportBackup}
                     >
                       📤 Export Backup
@@ -1496,7 +1531,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-color)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={() => fileInputRef.current?.click()}
                     >
                       📥 Import Backup
@@ -1634,18 +1669,19 @@ function App() {
                 </div>
                 
                 {/* Horizontal Category Tag Filter Pills */}
-                {Array.from(new Set(history.flatMap(memo => memo.tags || []))).length > 0 && (
+                {allUniqueTags.length > 0 && (
                   <div className="timeline-tags-filter-bar" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
                     <button
                       className={`tag-filter-chip ${selectedTagFilter === null ? 'active' : ''}`}
                       onClick={() => setSelectedTagFilter(null)}
+                      aria-pressed={selectedTagFilter === null}
                       style={{
                         padding: '0.4rem 0.8rem',
                         borderRadius: '20px',
                         fontSize: '0.85rem',
                         border: '1px solid var(--sage-border)',
                         background: selectedTagFilter === null ? 'var(--sage-accent)' : 'transparent',
-                        color: selectedTagFilter === null ? '#fff' : 'var(--text-color)',
+                        color: selectedTagFilter === null ? '#fff' : 'var(--text-main)',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         whiteSpace: 'nowrap',
@@ -1660,23 +1696,31 @@ function App() {
                       </svg>
                       All Tags
                     </button>
-                    {Array.from(new Set(history.flatMap(memo => memo.tags || []))).map(tag => (
+                    {allUniqueTags.map(tag => (
                       <button
                         key={tag}
                         className={`tag-filter-chip ${selectedTagFilter === tag ? 'active' : ''}`}
                         onClick={() => setSelectedTagFilter(tag)}
+                        aria-pressed={selectedTagFilter === tag}
                         style={{
                           padding: '0.4rem 0.8rem',
                           borderRadius: '20px',
                           fontSize: '0.85rem',
                           border: '1px solid var(--sage-border)',
                           background: selectedTagFilter === tag ? 'var(--sage-accent)' : 'transparent',
-                          color: selectedTagFilter === tag ? '#fff' : 'var(--text-color)',
+                          color: selectedTagFilter === tag ? '#fff' : 'var(--text-main)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
-                          whiteSpace: 'nowrap'
+                          whiteSpace: 'nowrap',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
                         }}
                       >
+                        <svg style={{ width: '12px', height: '12px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                          <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2.5"></line>
+                        </svg>
                         #{tag}
                       </button>
                     ))}
@@ -1864,7 +1908,7 @@ function App() {
           <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="export-modal-header">
               <h3 className="export-modal-title">Export Draft</h3>
-              <button className="export-modal-close" onClick={() => setIsExportDrawerOpen(false)}>✕</button>
+              <button className="export-modal-close" onClick={() => setIsExportDrawerOpen(false)} aria-label="Close Export Drawer">✕</button>
             </div>
             
             <div className="export-options-grid">
@@ -1969,7 +2013,7 @@ function App() {
                   Install Now
                 </button>
               )}
-              <button className="pwa-install-close-btn" onClick={handleDismissInstallBanner}>✕</button>
+              <button className="pwa-install-close-btn" onClick={handleDismissInstallBanner} aria-label="Dismiss Install Banner">✕</button>
             </div>
           </div>
         </div>
@@ -1989,7 +2033,7 @@ function App() {
           <div className="doctor-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="doctor-modal-header">
               <h3 className="doctor-modal-title">🩺 Offline Engine Doctor</h3>
-              <button className="doctor-modal-close" onClick={() => setIsDoctorOpen(false)}>✕</button>
+              <button className="doctor-modal-close" onClick={() => setIsDoctorOpen(false)} aria-label="Close Engine Doctor">✕</button>
             </div>
             <div className="doctor-metrics-grid">
               <div className="doctor-metric-card">
@@ -2317,7 +2361,7 @@ function TimelineCard({ memo, onLoad, onDelete }: { memo: VoiceMemo; onLoad: (m:
             style={{
               background: 'var(--sage-bg-hover)',
               border: '1px solid var(--sage-border)',
-              color: 'var(--text-color)',
+              color: 'var(--text-main)',
               padding: '0.4rem 0.8rem',
               borderRadius: '8px',
               fontSize: '0.82rem',

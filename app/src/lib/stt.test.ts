@@ -94,15 +94,18 @@ describe("STTEngine", () => {
 
     expect(mockWorkerInstance.postMessage).toHaveBeenCalledWith({
       type: "TRANSCRIBE",
-      data: { audio: audioData },
+      data: expect.objectContaining({ audio: audioData, requestId: expect.any(String) }),
     });
     expect(onStatus).toHaveBeenCalledWith("Transcribing...");
+
+    const sentRequestId = mockWorkerInstance.postMessage.mock.lastCall[0].data.requestId;
 
     // Simulate RESULT message from worker
     mockWorkerInstance.onmessage({
       data: {
         type: "RESULT",
         data: "transcribed text",
+        requestId: sentRequestId,
       },
     });
 
@@ -118,11 +121,14 @@ describe("STTEngine", () => {
     stt.preloadModel("Xenova/whisper-tiny.en");
     stt.transcribeBuffer(audioData, onResult, onStatus);
 
+    const sentRequestId = mockWorkerInstance.postMessage.mock.lastCall[0].data.requestId;
+
     // Simulate ERROR message from worker
     mockWorkerInstance.onmessage({
       data: {
         type: "ERROR",
         data: "whisper execution failed",
+        requestId: sentRequestId,
       },
     });
 

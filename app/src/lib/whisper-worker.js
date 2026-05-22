@@ -46,7 +46,7 @@ self.onmessage = async (e) => {
     await init(data?.modelName);
   } else if (type === 'TRANSCRIBE') {
     if (!transcriber) {
-      self.postMessage({ type: 'ERROR', data: 'Transcriber not initialized' });
+      self.postMessage({ type: 'ERROR', data: 'Transcriber not initialized', requestId: data?.requestId });
       return;
     }
     
@@ -56,9 +56,9 @@ self.onmessage = async (e) => {
         stride_length_s: 5,
       });
       
-      self.postMessage({ type: 'RESULT', data: output.text });
+      self.postMessage({ type: 'RESULT', data: output.text, requestId: data?.requestId });
     } catch (err) {
-      self.postMessage({ type: 'ERROR', data: `Transcription error: ${err.message || err}` });
+      self.postMessage({ type: 'ERROR', data: `Transcription error: ${err.message || err}`, requestId: data?.requestId });
     }
   }
 };
