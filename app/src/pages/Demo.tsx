@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { inference, getInference } from "../lib/inference";
+import { getInference } from "../lib/inference";
 import { stt } from "../lib/stt";
 import questions from "../data/demo-questions.json";
 import memory from "../data/synthetic-memory.json";
@@ -43,7 +43,7 @@ function Demo() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-      const polished = await inference.polishTranscript(text, style, parsedDict);
+      const polished = await getInference().polishTranscript(text, style, parsedDict);
       setPolishedResult(polished);
       setStatus("AI Polishing complete");
     } catch (err) {

@@ -9,10 +9,10 @@
 - [x] Phase 8: Premium Polish (Siri visualizer, dark/light theme, Settings, audio chimes, export drawers)
 - [x] Phase 11: Premium Experience & Personalization (Drag-and-drop local audio imports, persisted HSL color themes, Canvas constellation Galaxy Map, onboarding spotlights)
 - [x] Pre-landing bugfixes (Worker race condition, Memory leaks, accessibility audit fixes)
+- [x] Revoke `URL.createObjectURL` references in the timeline component to prevent leak build-ups
+- [x] Guard overlapping `stt.start()` invocations explicitly in the UI
+- [x] Deprecate/drop the unused `inference` shim left from the early public demo
+- [x] Add explicit `Worker.onerror` drain handlers to the LLM and STT clients
 
 ## Open / Deferred Tasks
-- [ ] Revoke `URL.createObjectURL` references in the timeline component to prevent leak build-ups
-- [ ] Guard overlapping `stt.start()` invocations explicitly in the UI
-- [ ] Deprecate/drop the unused `inference` shim left from the early public demo
-- [ ] Add explicit `Worker.onerror` drain handlers to the LLM and STT clients
 - [ ] Phase 4: Vertex Gemma 4 LoRA training pipeline integration

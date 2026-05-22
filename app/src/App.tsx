@@ -5,7 +5,7 @@ import { embed } from './lib/embeddings'
 import { saveMemo, getAllMemos, deleteMemo, wipeAllMemos } from './lib/storage'
 import type { VoiceMemo } from './lib/storage'
 import { retrieve } from './lib/rag'
-import { getInference, inference } from './lib/inference'
+import { getInference } from './lib/inference'
 import { speak } from './lib/tts'
 import ModelDownloadGate from './components/ModelDownloadGate'
 import Demo from './pages/Demo'
@@ -134,6 +134,7 @@ function App() {
   const isDemoMode = window.location.hostname.includes('voicememory') || window.location.search.includes('demo')
   const [activeTab, setActiveTab] = useState<'dictation' | 'memories' | 'timeline' | 'query' | 'vault' | 'demo'>(isDemoMode ? 'demo' : 'dictation')
   const [isRecording, setIsRecording] = useState(false)
+  const [isTogglingRecord, setIsTogglingRecord] = useState(false)
   const [currentTranscript, setCurrentTranscript] = useState('')
   const [history, setHistory] = useState<VoiceMemo[]>([])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -331,10 +332,11 @@ function App() {
 
   const processImportedFile = async (file: File) => {
     setStatusText(`Loading file: ${file.name}...`);
+    let audioCtx: AudioContext | null = null;
     try {
       const arrayBuffer = await file.arrayBuffer();
       const AudioContextClass = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      const audioCtx = new AudioContextClass({ sampleRate: 16000 });
+      audioCtx = new AudioContextClass({ sampleRate: 16000 });
       
       setStatusText(`Decoding audio data...`);
       const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
@@ -377,6 +379,10 @@ function App() {
     } catch (err) {
       console.error('Failed to import audio file:', err);
       setStatusText(`Error importing audio: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      if (audioCtx) {
+        audioCtx.close().catch(e => console.error('Error closing AudioContext after import decode:', e));
+      }
     }
   };
 
@@ -554,7 +560,7 @@ function App() {
     setIsPolishing(true);
     setStatusText('AI is polishing the transcription...');
     try {
-      const polished = await inference.polishTranscript(text, style, dict, customInst);
+      const polished = await getInference().polishTranscript(text, style, dict, customInst);
       setPolishedResult(polished);
       setStatusText('Polishing complete');
       triggerInsights(polished);
@@ -573,7 +579,7 @@ function App() {
     }
     setIsGeneratingInsights(true);
     try {
-      const insights = await inference.generateInsights(text);
+      const insights = await getInference().generateInsights(text);
       setDraftInsights(insights);
     } catch (err) {
       console.error('Insights generation error:', err);
@@ -825,59 +831,68 @@ function App() {
   }, [isRecording]);
 
   const handleRecordToggle = async () => {
-    if (isRecording) {
-      playRecordStopSound();
-      setStatusText('Stopping recorder...');
-      const audioBlob = await stt.stop()
-      setIsRecording(false)
-      setLastAudioBlob(audioBlob)
-      if (audioBlob) {
-        setStatusText('Transcribing audio on-device...');
-      } else {
-        setStatusText('Recording stopped (no audio captured)');
-      }
-    } else {
-      playRecordStartSound();
-      window.speechSynthesis.cancel()
-      setIsSpeaking(false)
-      
-      setCurrentTranscript('')
-      setPolishedResult('')
-      setLastAudioBlob(undefined)
-      setIsRecording(true)
-      setStatusText('Recording... Speak clearly.');
-      
-      await stt.start(
-        (result) => {
-          let text = result.text || '';
-          // Remove Whisper artifacts like [BLANK_AUDIO]
-          text = text.replace(/\[BLANK_AUDIO\]/gi, '').trim();
-          setCurrentTranscript(text);
-          if (text) {
-            triggerPolishing(
-              text,
-              dictationStyleRef.current,
-              dictionaryTagsRef.current,
-              customInstructionRef.current
-            );
-          } else {
-            setStatusText('No speech detected');
-          }
-        },
-        (status) => {
-          setStatusText(status);
-        },
-        (file, progress) => {
-          setDownloadingFile(file);
-          setDownloadProgress(progress);
-          if (progress >= 100) {
-            setTimeout(() => {
-              setDownloadProgress(null);
-              setDownloadingFile(null);
-            }, 1200);
-          }
+    if (isTogglingRecord) return;
+    setIsTogglingRecord(true);
+    try {
+      if (isRecording) {
+        playRecordStopSound();
+        setStatusText('Stopping recorder...');
+        const audioBlob = await stt.stop()
+        setIsRecording(false)
+        setLastAudioBlob(audioBlob)
+        if (audioBlob) {
+          setStatusText('Transcribing audio on-device...');
+        } else {
+          setStatusText('Recording stopped (no audio captured)');
         }
-      )
+      } else {
+        playRecordStartSound();
+        window.speechSynthesis.cancel()
+        setIsSpeaking(false)
+        
+        setCurrentTranscript('')
+        setPolishedResult('')
+        setLastAudioBlob(undefined)
+        setIsRecording(true)
+        setStatusText('Recording... Speak clearly.');
+        
+        await stt.start(
+          (result) => {
+            let text = result.text || '';
+            // Remove Whisper artifacts like [BLANK_AUDIO]
+            text = text.replace(/\[BLANK_AUDIO\]/gi, '').trim();
+            setCurrentTranscript(text);
+            if (text) {
+              triggerPolishing(
+                text,
+                dictationStyleRef.current,
+                dictionaryTagsRef.current,
+                customInstructionRef.current
+              );
+            } else {
+              setStatusText('No speech detected');
+            }
+          },
+          (status) => {
+            setStatusText(status);
+          },
+          (file, progress) => {
+            setDownloadingFile(file);
+            setDownloadProgress(progress);
+            if (progress >= 100) {
+              setTimeout(() => {
+                setDownloadProgress(null);
+                setDownloadingFile(null);
+              }, 1200);
+            }
+          }
+        )
+      }
+    } catch (err) {
+      console.error('Error toggling record:', err);
+      setStatusText(`Error toggling record: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsTogglingRecord(false);
     }
   }
 
@@ -1162,6 +1177,7 @@ function App() {
                   <button 
                     className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
                     onClick={handleRecordToggle}
+                    disabled={isTogglingRecord}
                     aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
                     aria-pressed={isRecording}
                   >
@@ -1921,6 +1937,7 @@ function App() {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(url);
                 playSuccessSound();
                 setStatusText('Downloaded Markdown file');
                 setIsExportDrawerOpen(false);
@@ -1938,6 +1955,7 @@ function App() {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(url);
                 playSuccessSound();
                 setStatusText('Downloaded Plain Text file');
                 setIsExportDrawerOpen(false);
@@ -2228,30 +2246,60 @@ function TimelineAudioPlayer({ audioBlob }: { audioBlob: Blob }) {
   useEffect(() => {
     if (!audioBlob) return;
     
+    let ctx: AudioContext | null = null;
     const decodeAudio = async () => {
       try {
         const arrayBuffer = await audioBlob.arrayBuffer();
-        const ctx = new (window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        ctx = new AudioContextClass();
         const decoded = await ctx.decodeAudioData(arrayBuffer);
         setAudioBuffer(decoded);
         setDuration(decoded.duration);
       } catch (err) {
         console.error('Error decoding audio blob:', err);
+      } finally {
+        if (ctx) {
+          ctx.close().catch(e => console.error('Error closing decode AudioContext:', e));
+        }
       }
     };
     
     decodeAudio();
   }, [audioBlob]);
 
+  useEffect(() => {
+    return () => {
+      isPlayingRef.current = false;
+      cancelAnimationFrame(animationFrameRef.current);
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop();
+        } catch (e) {
+          // ignore if already stopped
+        }
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(e => console.error('Error closing AudioContext on unmount:', e));
+      }
+    };
+  }, []);
+
   const togglePlay = () => {
     if (isPlaying) {
       isPlayingRef.current = false;
       setIsPlaying(false);
       cancelAnimationFrame(animationFrameRef.current);
-      if (sourceNodeRef.current) sourceNodeRef.current.stop();
+      if (sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
       if (audioContextRef.current) {
         pausedAtRef.current = audioContextRef.current.currentTime - startTimeRef.current;
-        audioContextRef.current.close();
+        audioContextRef.current.close().catch(e => console.error('Error closing AudioContext on pause:', e));
+        audioContextRef.current = null;
       }
     } else {
       if (!audioBuffer) return;
@@ -2266,7 +2314,17 @@ function TimelineAudioPlayer({ audioBlob }: { audioBlob: Blob }) {
       sourceNodeRef.current = source;
       isPlayingRef.current = true;
       setIsPlaying(true);
-      source.onended = () => { if (isPlayingRef.current) setIsPlaying(false); };
+      source.onended = () => {
+        if (isPlayingRef.current) {
+          isPlayingRef.current = false;
+          setIsPlaying(false);
+          pausedAtRef.current = 0; // reset playback to start
+          if (audioContextRef.current) {
+            audioContextRef.current.close().catch(e => console.error('Error closing AudioContext on end:', e));
+            audioContextRef.current = null;
+          }
+        }
+      };
       const update = () => {
         if (isPlayingRef.current) {
           setCurrentTime(ctx.currentTime - startTimeRef.current);

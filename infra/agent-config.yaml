@@ -1,0 +1,19 @@
+# Antigravity Weekly LoRA Training Scheduler Configuration
+cron: "0 0 * * 0"  # Every Sunday at midnight UTC
+timezone: "UTC"
+pipeline:
+  name: "voice-memory-weekly-lora-gemma4"
+  steps:
+    - name: export-data
+      action: "export_browser_db_to_jsonl"
+      output: "gs://voice-memory-data/weekly_export.jsonl"
+    - name: train-lora
+      action: "run_vertex_training_job"
+      config: "infra/train_config.yaml"
+    - name: convert-lora
+      action: "run_lora_conversion"
+      script: "infra/convert_lora.py"
+      output: "gs://voice-memory-models/weekly_lora_flatbuffer/lora.bin"
+    - name: publish-lora
+      action: "generate_signed_download_url"
+      ttl_days: 7

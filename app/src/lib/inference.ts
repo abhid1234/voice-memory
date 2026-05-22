@@ -4,6 +4,7 @@ import { fallbackPolish, fallbackInsights } from "./flow";
 export interface LlmWorkerLike {
   postMessage(message: unknown): void;
   onmessage: ((ev: { data: unknown }) => void) | null;
+  onerror?: ((ev: any) => void) | null;
 }
 
 type Pending = {
@@ -22,6 +23,23 @@ export class InferenceClient {
   constructor(worker: LlmWorkerLike) {
     this.worker = worker;
     this.worker.onmessage = (ev) => this.dispatch(ev.data);
+    if (this.worker.onerror !== undefined) {
+      this.worker.onerror = (err) => {
+        console.error("Inference worker error encountered:", err);
+        const message = (err && typeof err === "object" && "message" in err) 
+          ? String((err as any).message) 
+          : String(err);
+        this.drainPending(new Error(message || "Worker runtime exception"));
+      };
+    }
+  }
+
+  private drainPending(err: Error) {
+    const items = Array.from(this.pending.values());
+    this.pending.clear();
+    for (const p of items) {
+      p.reject(err);
+    }
   }
 
   private dispatch(m: unknown) {
@@ -31,8 +49,10 @@ export class InferenceClient {
       text?: string;
       error?: string;
     };
-    if (msg.type === "READY") {
-      this.ready = true;
+    if (msg.type === "READY" || msg.type === "LORA_READY") {
+      if (msg.type === "READY") {
+        this.ready = true;
+      }
       if (msg.id != null) {
         const p = this.pending.get(msg.id);
         if (p) {
@@ -78,6 +98,22 @@ export class InferenceClient {
     });
     return this.initPromise;
   }
+
+  /**
+   * Load a converted LoRA FlatBuffer model into the running inference session.
+   */
+  loadLoRA(url: string): Promise<void> {
+    const id = this.nextId++;
+    return new Promise<void>((resolve, reject) => {
+      this.pending.set(id, {
+        resolve: () => resolve(),
+        reject,
+        onToken: () => {},
+      });
+      this.worker.postMessage({ type: "LOAD_LORA", id, url });
+    });
+  }
+
 
   generateResponse(
     query: string,
@@ -184,22 +220,3 @@ export function getInference(): InferenceClient {
   }
   return singleton;
 }
-
-// Export a legacy compatibility object that calls getInference()
-export const inference = {
-  get client() {
-    return getInference();
-  },
-  polishTranscript(rawText: string, style: string, dictionary: string[], customInstruction?: string) {
-    return getInference().polishTranscript(rawText, style, dictionary, customInstruction);
-  },
-  generateInsights(text: string) {
-    return getInference().generateInsights(text);
-  },
-  generateResponse(query: string, context: string, onToken?: (t: string) => void) {
-    return getInference().generateResponse(query, context, onToken);
-  },
-  isReady() {
-    return getInference().isReady();
-  },
-};

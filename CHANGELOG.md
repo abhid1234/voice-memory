@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.0.2] - 2026-05-22
+
+### Added
+- **Phase 4 Training & Conversion Scaffolding**: Causal LM training JSONL serializers, MediaPipe adapter dynamic loading in web workers, weekly cron execution configuration, and conversion script to compile TFLite adapters.
+- **Inference Worker Error Draining**: Worker `onerror` boundary to drain pending tasks cleanly on worker crash.
+
+### Fixed
+- **Resource Leaks**: AudioContext lifecycle closure on file import, unmount, and playback completion. Revocation of Object URLs in markdown and plain text export handlers.
+- **Concurrent Recording Safeguards**: Added recording state toggle guards to prevent concurrent microphone activations.
+- **Legacy Wrapper Cleanup**: Removed deprecated compatibility helper from `inference.ts`.
+
 ## [0.0.0.1] - 2026-05-22
 
 ### Added

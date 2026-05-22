@@ -102,3 +102,38 @@ export async function getModelBytes(variant: GemmaVariant): Promise<Uint8Array> 
   const fileObj = await handle.getFile()
   return new Uint8Array(await fileObj.arrayBuffer())
 }
+
+/** Download a LoRA file to OPFS as active-lora.bin */
+export async function downloadLoRA(signedUrl: string): Promise<void> {
+  const dir = await modelDir()
+  const handle = await dir.getFileHandle('active-lora.bin', { create: true })
+  const writable = await handle.createWritable()
+  try {
+    const res = await fetch(signedUrl)
+    if (!res.ok || !res.body) throw new Error(`LoRA download failed: HTTP ${res.status}`)
+    const reader = res.body.getReader()
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      await writable.write(value)
+    }
+    await writable.close()
+  } catch (e) {
+    try {
+      await writable.close()
+    } catch {
+      /* already errored */
+    }
+    await dir.removeEntry('active-lora.bin').catch(() => {})
+    throw e
+  }
+}
+
+/** Retrieve local object URL for cached active-lora.bin */
+export async function getLoRAUrl(): Promise<string> {
+  const dir = await modelDir()
+  const handle = await dir.getFileHandle('active-lora.bin')
+  const fileObj = await handle.getFile()
+  return URL.createObjectURL(fileObj)
+}
+
