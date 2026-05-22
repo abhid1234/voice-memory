@@ -21,7 +21,10 @@ export function retrieve(
   const ranked = memos
     // Skip records without a usable embedding (e.g. memos written before the
     // embedding field existed); cosineSimilarity assumes a non-empty vector.
-    .filter((memo) => memo.embedding && memo.embedding.length > 0)
+    .filter(
+      (memo): memo is VoiceMemo & { embedding: Float32Array } =>
+        !!memo.embedding && memo.embedding.length > 0,
+    )
     .map((memo) => ({
       memo,
       score: cosineSimilarity(queryVec, memo.embedding),

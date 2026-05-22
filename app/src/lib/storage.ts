@@ -10,8 +10,10 @@ export interface VoiceMemo {
   id?: number;
   timestamp: number;
   transcript: string;
-  embedding: Float32Array;
+  rawTranscript?: string;
+  embedding?: Float32Array;
   audioBlob?: Blob;
+  tags?: string[];
 }
 
 const DB_NAME = "VoiceMemoryDB";
@@ -63,3 +65,9 @@ export async function exportTranscriptsForTraining(): Promise<string> {
     )
     .join("\n");
 }
+
+export async function wipeAllMemos(): Promise<void> {
+  const db = await getDB();
+  await db.clear(STORE_NAME);
+}
+

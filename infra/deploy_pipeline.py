@@ -22,7 +22,7 @@ def deploy_training_job():
             "container_spec": {
                 "image_uri": "us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.1-13.py310:latest",
                 "args": [
-                    "--base_model=google/gemma-2b-it",
+                    "--base_model=google/gemma-4-2b-it",
                     "--lora_rank=8",
                     "--dataset_path=gs://voice-memory-data/weekly_export.jsonl",
                     "--output_dir=gs://voice-memory-models/weekly_lora_delta/",

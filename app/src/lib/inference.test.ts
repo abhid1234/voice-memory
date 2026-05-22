@@ -5,6 +5,7 @@ import type { LlmWorkerLike } from "./inference";
 class FakeWorker implements LlmWorkerLike {
   posted: unknown[] = [];
   onmessage: ((ev: { data: unknown }) => void) | null = null;
+  onerror: ((ev: any) => void) | null = null;
   postMessage(m: unknown) {
     this.posted.push(m);
   }
@@ -76,4 +77,128 @@ describe("InferenceClient", () => {
     fake.emit({ type: "READY", id: (fake.posted[0] as { id: number }).id });
     await Promise.all([a, b]);
   });
+
+  it("generateRaw posts GENERATE_RAW and resolves with the response", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    const promise = client.generateRaw("custom prompt");
+    const sent = fake.posted[0] as { type: string; id: number; prompt: string };
+    expect(sent.type).toBe("GENERATE_RAW");
+    expect(sent.prompt).toBe("custom prompt");
+    fake.emit({ type: "DONE", id: sent.id, text: "raw result" });
+    expect(await promise).toBe("raw result");
+  });
+
+  it("isReady reports false initially, then true after READY", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    expect(client.isReady()).toBe(false);
+    
+    // Trigger READY
+    fake.emit({ type: "READY" });
+    expect(client.isReady()).toBe(true);
+  });
+
+  it("polishTranscript uses fallback when not ready", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    expect(client.isReady()).toBe(false);
+
+    const result = await client.polishTranscript("um hello", "cleaned", []);
+    expect(result).toBe("Hello");
+    expect(fake.posted).toHaveLength(0);
+  });
+
+  it("polishTranscript uses generateRaw when ready", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    fake.emit({ type: "READY" });
+    expect(client.isReady()).toBe(true);
+
+    const promise = client.polishTranscript("raw input", "cleaned", ["DictionaryWord"]);
+    
+    // We expect a GENERATE_RAW message
+    const sent = fake.posted[0] as { type: string; id: number; prompt: string };
+    expect(sent.type).toBe("GENERATE_RAW");
+    expect(sent.prompt).toContain("DictionaryWord");
+    expect(sent.prompt).toContain("raw input");
+
+    fake.emit({ type: "DONE", id: sent.id, text: "Polished output by model" });
+    expect(await promise).toBe("Polished output by model");
+  });
+
+  it("polishTranscript catches error and uses fallback", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    fake.emit({ type: "READY" });
+
+    const promise = client.polishTranscript("um hello", "cleaned", []);
+    const sent = fake.posted[0] as { id: number };
+    fake.emit({ type: "ERROR", id: sent.id, error: "inference failed" });
+    
+    expect(await promise).toBe("Hello");
+  });
+
+  it("generateInsights uses fallback when not ready", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    expect(client.isReady()).toBe(false);
+
+    const result = await client.generateInsights("need to do task");
+    expect(result).toContain("📋 **Action Items:**");
+    expect(fake.posted).toHaveLength(0);
+  });
+
+  it("generateInsights uses generateRaw when ready", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    fake.emit({ type: "READY" });
+
+    const promise = client.generateInsights("some text");
+    const sent = fake.posted[0] as { type: string; id: number; prompt: string };
+    expect(sent.type).toBe("GENERATE_RAW");
+    expect(sent.prompt).toContain("some text");
+
+    fake.emit({ type: "DONE", id: sent.id, text: "Extracted insights by model" });
+    expect(await promise).toBe("Extracted insights by model");
+  });
+
+  it("generateInsights catches error and uses fallback", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    fake.emit({ type: "READY" });
+
+    const promise = client.generateInsights("need to do task");
+    const sent = fake.posted[0] as { id: number };
+    fake.emit({ type: "ERROR", id: sent.id, error: "inference failed" });
+    
+    expect(await promise).toContain("📋 **Action Items:**");
+  });
+
+  it("rejects all pending promises if worker.onerror is called", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    const p1 = client.generateResponse("q1", "ctx");
+    const p2 = client.generateResponse("q2", "ctx");
+    
+    expect(fake.onerror).toBeDefined();
+    if (fake.onerror) {
+      fake.onerror(new Error("worker crash"));
+    }
+    
+    await expect(p1).rejects.toThrow("worker crash");
+    await expect(p2).rejects.toThrow("worker crash");
+  });
+
+  it("loadLoRA posts LOAD_LORA and resolves on LORA_READY", async () => {
+    const fake = new FakeWorker();
+    const client = new InferenceClient(fake);
+    const p = client.loadLoRA("blob:lora-url");
+    const sent = fake.posted[0] as { type: string; id: number; url: string };
+    expect(sent.type).toBe("LOAD_LORA");
+    expect(sent.url).toBe("blob:lora-url");
+    fake.emit({ type: "LORA_READY", id: sent.id });
+    await expect(p).resolves.toBeUndefined();
+  });
 });
+
