@@ -5,6 +5,7 @@ import {
   getMemo,
   deleteMemo,
   exportTranscriptsForTraining,
+  wipeAllMemos,
 } from "./storage";
 import type { VoiceMemo } from "./storage";
 
@@ -54,6 +55,14 @@ describe("storage", () => {
   it("deleteMemo removes the memo", async () => {
     const id = await saveMemo(makeMemo());
     await deleteMemo(id);
+    expect(await getAllMemos()).toHaveLength(0);
+  });
+
+  it("wipeAllMemos deletes all memos", async () => {
+    await saveMemo(makeMemo());
+    await saveMemo(makeMemo());
+    expect(await getAllMemos()).toHaveLength(2);
+    await wipeAllMemos();
     expect(await getAllMemos()).toHaveLength(0);
   });
 
