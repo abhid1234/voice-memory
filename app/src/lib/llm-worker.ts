@@ -11,6 +11,7 @@ type InMsg =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let llm: any = null;
 let initPromise: Promise<void> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let activeLoraModel: any = null;
 
 async function doInit(variant: GemmaVariant) {
@@ -24,6 +25,7 @@ async function doInit(variant: GemmaVariant) {
     topK: 40,
     temperature: 0.7,
     loraRanks: [8],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 }
 

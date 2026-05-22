@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.0.4] - 2026-05-22
+
+### Changed
+- **ESLint rule updates for test files**: Scoped `@typescript-eslint/no-explicit-any` off for `**/*.test.{ts,tsx}` files to allow legitimate test mocks and Worker stubs without type contortions.
+- **LoRA Gate findings correction**: Updated `docs/superpowers/phase-d-conversion-findings.md` to classify Gemma 4 web LoRA hot-swapping as unsupported in current MediaPipe web tasks runtime. Recommended falling back to RAG-only v1 processing.
+
+### Fixed
+- **ESLint errors**: Fixed remaining 24 eslint warnings across `App.tsx`, `inference.ts`, and `llm-worker.ts` by removing unused catch bindings and typing/annotating worker callbacks.
+
 ## [0.0.0.3] - 2026-05-22
 
 ### Added
