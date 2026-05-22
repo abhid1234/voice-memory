@@ -3,7 +3,7 @@ import { getModelBytes, type GemmaVariant } from "./model-store";
 import { buildGemmaPrompt } from "./gemma-prompt";
 
 type InMsg =
-  | { type: "INIT"; variant: GemmaVariant }
+  | { type: "INIT"; id: number; variant: GemmaVariant }
   | { type: "GENERATE"; id: number; query: string; context: string };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,9 +27,9 @@ async function doInit(variant: GemmaVariant) {
 function ensureInit(variant: GemmaVariant) {
   if (!initPromise) {
     initPromise = doInit(variant).catch((e) => {
-      initPromise = null // allow a retry after a failed load
-      throw e
-    })
+      initPromise = null; // allow a retry after a failed load
+      throw e;
+    });
   }
   return initPromise;
 }
@@ -41,7 +41,7 @@ self.onmessage = async (ev: MessageEvent) => {
   try {
     if (msg.type === "INIT") {
       await ensureInit(msg.variant);
-      post({ type: "READY" });
+      post({ type: "READY", id: msg.id });
     } else if (msg.type === "GENERATE") {
       // A GENERATE can arrive while INIT's model load is still in flight; wait for it.
       if (!initPromise) throw new Error("LLM not initialized (INIT not sent)");
