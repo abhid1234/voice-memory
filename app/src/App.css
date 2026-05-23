@@ -1,8 +1,18 @@
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Type scale (font-size) — single source of truth; replaces 27 ad-hoc sizes.
+     Named --fs-* to avoid clashing with the --text-main / --text-muted color tokens below. */
+  --fs-xs: 0.75rem;     /* 12px — captions, meta */
+  --fs-sm: 0.8125rem;   /* 13px — secondary text, labels */
+  --fs-base: 0.875rem;  /* 14px — body / UI default */
+  --fs-md: 1rem;        /* 16px — emphasized body */
+  --fs-lg: 1.125rem;    /* 18px — small headings */
+  --fs-xl: 1.5rem;      /* 24px — section headings */
+  --fs-2xl: 2.25rem;    /* 36px — page titles */
+  --fs-3xl: 3rem;       /* 48px — hero / display */
 
   /* Editorial Light Theme */
   --bg-color: #f7f5f0; /* warm paper light cream */
@@ -136,7 +146,7 @@ body {
 
 .site-title {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: var(--fs-xl);
   font-weight: 600;
   letter-spacing: -0.01em;
   background: linear-gradient(135deg, var(--text-main) 0%, var(--accent-color) 100%);
@@ -145,7 +155,7 @@ body {
 }
 
 .badge-local {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--accent-bright);
   background: var(--accent-light);
@@ -165,7 +175,7 @@ body {
   border: none;
   color: var(--text-muted);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   cursor: pointer;
   padding: 0.5rem 0.2rem;
@@ -232,7 +242,7 @@ body {
 
 .section-title {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -281,11 +291,11 @@ body {
 }
 
 .icon-mic {
-  font-size: 2.2rem;
+  font-size: var(--fs-2xl);
 }
 
 .btn-label {
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -298,7 +308,7 @@ body {
   border: 1px solid var(--card-border);
   padding: 4px 12px;
   border-radius: 100px;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--text-main);
   margin-top: 1rem;
@@ -327,7 +337,7 @@ body {
 .status-indicator {
   display: flex;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   margin-top: 1.2rem;
   background: rgba(18, 18, 16, 0.015);
   padding: 0.6rem 0.8rem;
@@ -362,7 +372,7 @@ body {
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -391,7 +401,7 @@ body {
 }
 
 .input-label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -402,7 +412,7 @@ body {
   border-radius: 10px;
   padding: 0.7rem 0.9rem;
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   font-family: var(--font-sans);
   transition: all 0.2s ease;
 }
@@ -451,7 +461,7 @@ body {
 }
 
 .doc-badge {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   background: rgba(18, 18, 16, 0.04);
@@ -463,7 +473,7 @@ body {
 
 .sheet-title {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   font-weight: 500;
   color: var(--text-main);
   margin: 0;
@@ -482,7 +492,7 @@ body {
   color: var(--text-main);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -549,13 +559,13 @@ body {
 
 .sheet-placeholder p {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: var(--fs-xl);
   margin-bottom: 0.6rem;
   font-style: italic;
 }
 
 .placeholder-subtext {
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   max-width: 320px;
   line-height: 1.5;
 }
@@ -584,8 +594,8 @@ body {
 }
 
 .sheet-polished-body {
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
   line-height: 1.7;
   color: var(--text-main);
   white-space: pre-wrap;
@@ -602,7 +612,7 @@ body {
 
 .sheet-raw-expansion details {
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   cursor: pointer;
 }
 
@@ -612,9 +622,9 @@ body {
 }
 
 .raw-expanded-text {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-style: italic;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   line-height: 1.5;
   color: var(--text-muted);
   padding: 0.5rem 0;
@@ -630,7 +640,7 @@ body {
 }
 
 .footer-meta {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -650,7 +660,7 @@ body {
 
 .workspace-heading {
   font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-size: var(--fs-2xl);
   margin-bottom: 0.5rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -658,7 +668,7 @@ body {
 
 .workspace-subheading {
   color: var(--text-muted);
-  font-size: 1.05rem;
+  font-size: var(--fs-md);
   margin-bottom: 2rem;
   font-weight: 300;
 }
@@ -676,7 +686,7 @@ body {
   border-radius: var(--radius-md);
   padding: 1.1rem 1.4rem;
   color: var(--text-main);
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-family: var(--font-sans);
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
@@ -696,7 +706,7 @@ body {
   border-radius: var(--radius-md);
   padding: 0 2rem;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   transition: filter 0.2s;
   font-family: var(--font-sans);
@@ -713,7 +723,7 @@ body {
 }
 
 .answer-heading {
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   text-transform: uppercase;
   color: var(--accent-bright);
   letter-spacing: 0.06em;
@@ -721,8 +731,8 @@ body {
 }
 
 .answer-body {
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
   line-height: 1.7;
   color: var(--text-main);
   margin-bottom: 2rem;
@@ -734,7 +744,7 @@ body {
 }
 
 .sources-heading {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.06em;
@@ -756,14 +766,14 @@ body {
 }
 
 .source-index {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--accent-bright);
 }
 
 .source-text {
-  font-family: var(--font-serif);
-  font-size: 0.92rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
   line-height: 1.5;
   margin: 0.5rem 0;
   font-style: italic;
@@ -771,7 +781,7 @@ body {
 }
 
 .source-date {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   color: rgba(18, 18, 16, 0.25);
   font-weight: 500;
 }
@@ -810,13 +820,13 @@ body {
 }
 
 .timeline-item-time {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: rgba(18, 18, 16, 0.35);
   font-weight: 500;
 }
 
 .timeline-item-badge {
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--accent-bright);
   background: var(--accent-light);
@@ -825,8 +835,8 @@ body {
 }
 
 .timeline-item-text {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
   line-height: 1.6;
   color: var(--text-main);
   margin: 0;
@@ -843,13 +853,13 @@ body {
 
 .timeline-empty-card p {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: var(--fs-xl);
   margin-bottom: 0.5rem;
   font-style: italic;
 }
 
 .timeline-empty-card span {
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
 }
 
 /* Demo component integration wrapper */
@@ -869,10 +879,10 @@ body {
   border: 1px solid var(--card-border);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin-bottom: 1.2rem;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 
 .transcription-preview {
@@ -921,7 +931,7 @@ body {
   padding: 0.6rem 1rem;
   border-radius: 10px;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -963,7 +973,7 @@ body {
   color: var(--text-muted);
   padding: 0.4rem 0.8rem;
   border-radius: 100px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: var(--font-sans);
@@ -989,7 +999,7 @@ body {
 }
 
 .dictionary-field label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   font-weight: 500;
   font-family: var(--font-sans);
@@ -1001,7 +1011,7 @@ body {
   border-radius: 10px;
   padding: 0.6rem 0.8rem;
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   transition: all 0.2s ease;
   font-family: var(--font-sans);
 }
@@ -1023,7 +1033,7 @@ body {
   border: none;
   padding: 0;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   color: var(--text-muted);
 }
 
@@ -1031,7 +1041,7 @@ body {
   margin: 0.2rem 0 0 0;
   font-style: italic;
   line-height: 1.4;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 .transcription-preview.polished {
@@ -1053,7 +1063,7 @@ body {
 }
 
 .polished-header strong {
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   color: var(--accent-bright);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1066,7 +1076,7 @@ body {
   color: var(--text-main);
   padding: 0.4rem 0.8rem;
   border-radius: var(--radius-sm);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1099,8 +1109,8 @@ body {
 
 .polished-text {
   margin: 0;
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
   line-height: 1.6;
   color: var(--text-main);
   white-space: pre-wrap;
@@ -1111,7 +1121,7 @@ body {
 .loading-text {
   color: var(--text-muted);
   font-style: italic;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   margin: 0.5rem 0;
   animation: pulse-dim 1.5s infinite ease-in-out;
   font-family: var(--font-sans);
@@ -1162,7 +1172,7 @@ body {
 .download-progress-label {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin-bottom: 0.4rem;
   font-weight: 500;
@@ -1192,7 +1202,7 @@ body {
     gap: 1rem;
   }
   .nav-link {
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
   }
   .workspace-container {
     padding: 2rem 1.2rem 4rem 1.2rem;
@@ -1235,7 +1245,7 @@ body {
     min-width: 120px;
     text-align: center;
     justify-content: center;
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     padding: 0.5rem 0.8rem;
   }
   .timeline-card-item {
@@ -1252,8 +1262,8 @@ body {
   outline: none;
   resize: none;
   background: transparent;
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lg);
   line-height: 1.75;
   color: var(--text-main);
   padding: 0.5rem 0;
@@ -1273,7 +1283,7 @@ body {
 
 .insights-title {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1287,12 +1297,12 @@ body {
   gap: 0.6rem;
   color: var(--text-muted);
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
 }
 
 .insights-content {
   font-family: var(--font-sans);
-  font-size: 0.92rem;
+  font-size: var(--fs-base);
   line-height: 1.6;
   color: var(--text-main);
 }
@@ -1309,7 +1319,7 @@ body {
 .insights-empty {
   color: var(--text-muted);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
 }
 
 .loading-spinner-small {
@@ -1336,7 +1346,7 @@ body {
   background: var(--accent-light);
   border: 1px solid rgba(78, 126, 96, 0.15);
   color: var(--accent-bright);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   padding: 3px 10px;
   border-radius: 100px;
   font-weight: 500;
@@ -1351,7 +1361,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: rgba(78, 126, 96, 0.5);
   padding: 0;
   display: flex;
@@ -1390,7 +1400,7 @@ body {
   border-radius: 100px;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -1423,7 +1433,7 @@ body {
   background-color: var(--card-bg);
   color: var(--text-main);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   outline: none;
   transition: border-color 0.2s;
   cursor: pointer;
@@ -1432,7 +1442,7 @@ body {
   border-color: var(--accent-color);
 }
 .model-helper-text {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin-top: 0.5rem;
   line-height: 1.35;
@@ -1460,7 +1470,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   outline: none;
 }
 .timeline-search-input:focus {
@@ -1470,7 +1480,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
@@ -1510,15 +1520,15 @@ body {
   padding-bottom: 0.75rem;
 }
 .export-modal-title {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
   margin: 0;
   color: var(--text-main);
 }
 .export-modal-close {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   color: var(--text-muted);
   cursor: pointer;
   transition: color 0.2s;
@@ -1554,12 +1564,12 @@ body {
   background-color: var(--card-bg);
 }
 .export-icon {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   margin-bottom: 0.5rem;
 }
 .export-label {
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   color: var(--text-main);
 }
@@ -1594,18 +1604,18 @@ body {
   align-items: flex-start;
 }
 .incentive-icon {
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   line-height: 1;
 }
 .incentive-content strong {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--accent-bright);
   margin-bottom: 0.25rem;
 }
 .incentive-content p {
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   line-height: 1.4;
   margin: 0;
@@ -1642,7 +1652,7 @@ body {
 .pwa-install-badge {
   display: inline-block;
   font-family: var(--font-sans);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--accent-bright);
   background-color: var(--accent-light);
@@ -1651,15 +1661,15 @@ body {
   margin-bottom: 0.35rem;
 }
 .pwa-install-title {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
   margin: 0 0 0.2rem 0;
   color: var(--text-main);
   font-weight: 600;
 }
 .pwa-install-desc {
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin: 0;
 }
@@ -1670,7 +1680,7 @@ body {
 }
 .pwa-ios-guidance {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   color: var(--text-main);
   background-color: var(--bg-color);
   border: 1px solid var(--card-border);
@@ -1686,7 +1696,7 @@ body {
   color: white;
   border: none;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 0.5rem 1.1rem;
   border-radius: var(--radius-sm);
@@ -1703,7 +1713,7 @@ body {
 .pwa-install-close-btn {
   background: none;
   border: none;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   color: var(--text-muted);
   cursor: pointer;
   padding: 0.2rem;
@@ -1761,7 +1771,7 @@ body {
 }
 
 .timeline-item-tag-pill {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--accent-color);
   background: var(--accent-light);
@@ -1792,7 +1802,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
   transition: all 0.2s ease;
 }
 .custom-player-play-btn:hover {
@@ -1808,7 +1818,7 @@ body {
   display: block;
 }
 .custom-player-time {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-family: var(--font-sans);
   color: var(--text-muted);
   font-weight: 500;
@@ -1839,7 +1849,7 @@ body {
 }
 .undo-toast-text {
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
 }
 .undo-toast-btn {
@@ -1847,7 +1857,7 @@ body {
   color: white;
   border: none;
   font-family: var(--font-sans);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius-sm);
@@ -1893,15 +1903,15 @@ body {
   padding-bottom: 0.75rem;
 }
 .doctor-modal-title {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
+  font-family: var(--font-sans);
+  font-size: var(--fs-xl);
   margin: 0;
   color: var(--text-main);
 }
 .doctor-modal-close {
   background: none;
   border: none;
-  font-size: 1.2rem;
+  font-size: var(--fs-lg);
   color: var(--text-muted);
   cursor: pointer;
   transition: color 0.2s;
@@ -1925,18 +1935,18 @@ body {
   padding: 1rem;
 }
 .doctor-metric-card .metric-icon {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   line-height: 1;
 }
 .doctor-metric-card .metric-info strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--text-main);
   margin-bottom: 0.25rem;
 }
 .doctor-metric-card .metric-info p {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   margin: 0;
   line-height: 1.4;
@@ -1952,7 +1962,7 @@ body {
   border: 1px solid rgba(220, 53, 69, 0.2);
   color: #dc3545;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-sm);
@@ -1967,7 +1977,7 @@ body {
   color: white;
   border: none;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
   padding: 0.6rem 1.5rem;
   border-radius: var(--radius-sm);
@@ -2007,19 +2017,19 @@ body {
   text-align: center;
 }
 .drag-drop-icon {
-  font-size: 3rem;
+  font-size: var(--fs-3xl);
   margin-bottom: 0.8rem;
   animation: float-slow 3s infinite ease-in-out;
 }
 .drag-drop-text {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--text-main);
   margin-bottom: 0.3rem;
 }
 .drag-drop-subtext {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -2052,7 +2062,7 @@ body {
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -2165,7 +2175,7 @@ body {
   color: var(--accent-bright);
   font-weight: 600;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   margin-left: 1rem;
 }
 .header-left, .header-right {
@@ -2208,7 +2218,7 @@ body {
   gap: 0.5rem;
   color: var(--accent-bright);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--fs-base);
 }
 .cloud-icon {
   width: 16px;
@@ -2216,7 +2226,7 @@ body {
   stroke: var(--accent-color);
 }
 .cloud-sync-subtext {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -2270,7 +2280,7 @@ body {
     border: none;
     color: var(--text-muted);
     font-family: var(--font-display);
-    font-size: 0.95rem;
+    font-size: var(--fs-md);
     font-weight: 500;
     cursor: pointer;
     padding: 0.8rem 1rem;
@@ -2459,7 +2469,7 @@ body {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 1.25rem;
+    font-size: var(--fs-lg);
     cursor: pointer;
     padding: 0.25rem;
   }
@@ -2476,7 +2486,7 @@ body {
     border: none;
     color: var(--text-muted);
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: var(--fs-md);
     font-weight: 500;
     cursor: pointer;
     padding: 0.8rem 1rem;
@@ -2532,7 +2542,7 @@ body {
     border: none;
     color: var(--text-muted);
     font-family: var(--font-sans);
-    font-size: 0.72rem;
+    font-size: var(--fs-xs);
     font-weight: 500;
     cursor: pointer;
     display: flex;
@@ -2642,7 +2652,7 @@ body {
   color: var(--accent-bright);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2658,7 +2668,7 @@ body {
 .profile-name {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: var(--text-main);
 }
 
@@ -2667,7 +2677,7 @@ body {
   align-items: center;
   gap: 0.35rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -2690,7 +2700,7 @@ body {
 
 .stat-label {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -2698,7 +2708,7 @@ body {
 
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 1.1rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--text-main);
   margin-top: 0.25rem;
@@ -2739,20 +2749,20 @@ body {
 }
 
 .vault-icon {
-  font-size: 2.5rem;
+  font-size: var(--fs-2xl);
   line-height: 1;
 }
 
 .vault-status-header h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: var(--fs-xl);
   color: var(--text-main);
 }
 
 .status-secured {
   margin: 0.25rem 0 0 0;
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   color: var(--accent-bright);
   font-weight: 500;
 }
@@ -2770,14 +2780,14 @@ body {
 }
 
 .feature-icon {
-  font-size: 1.5rem;
+  font-size: var(--fs-xl);
   line-height: 1.2;
 }
 
 .feature-info strong {
   display: block;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text-main);
   margin-bottom: 0.25rem;
@@ -2785,7 +2795,7 @@ body {
 
 .feature-info p {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.45;
 }
@@ -2808,13 +2818,13 @@ body {
 
 .vault-metric-row span {
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   color: var(--text-muted);
 }
 
 .vault-metric-row strong {
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   color: var(--text-main);
   font-weight: 500;
 }
@@ -2823,7 +2833,7 @@ body {
   width: 100%;
   padding: 0.8rem 1.2rem;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -2906,7 +2916,7 @@ body {
   border: none;
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   padding: 0.6rem 0.4rem;
   border-radius: var(--radius-sm);
@@ -2988,7 +2998,7 @@ body {
   background-color: var(--accent-light);
   border: 1px solid var(--accent-color);
   color: var(--accent-bright);
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
@@ -3020,7 +3030,7 @@ body {
   text-align: left;
   transition: all 0.2s ease;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: var(--fs-base);
   font-weight: 500;
 }
 
@@ -3069,7 +3079,7 @@ body {
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   padding: 0;
   outline: none;
   width: 90px;
@@ -3086,7 +3096,7 @@ body {
   border: none;
   border-radius: 100px;
   color: var(--accent-bright);
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 3px 8px;
   cursor: pointer;

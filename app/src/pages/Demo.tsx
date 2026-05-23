@@ -325,7 +325,7 @@ function Demo() {
       </div>
 
       <div className="install-prompt">
-        <button className="record-btn secondary" style={{ fontSize: "1rem", padding: "1rem 2rem" }}>
+        <button className="record-btn secondary" style={{ fontSize: "var(--fs-md)", padding: "1rem 2rem" }}>
           Install for yourself
         </button>
         <p className="status-text">Only the full app asks for microphone access.</p>
