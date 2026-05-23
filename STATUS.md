@@ -4,7 +4,7 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 
 ## Last updated
 
-2026-05-22 — Phase 11 Premium Experience & Personalization Suite complete, build and lint check fully verified (0 errors, 0 warnings), merged with origin/main, and verified.
+2026-05-22 — Phase 11 Premium Experience & Personalization Suite complete. Later same day: cleared 24 eslint errors that had merged to `main`, corrected the Phase D research gate (LoRA→web **fails for Gemma 4** → v1 is RAG-only, LoRA deferred to v1.1), and added a CI gate (lint+build+test) + branch protection on `main`. `lint`/`build`/`test` all green.
 
 ## Phase status
 
@@ -12,7 +12,7 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 - ✅ **Phase 1: PWA shell** — Completed. Scaffolded app directory with Vite + service worker + manifest, loads instantly.
 - ✅ **Phase 2: Capture flow** — Completed. Microphone recording + local Whisper STT transcribing on-device offline.
 - ✅ **Phase 3: On-device Gemma + RAG query** — Completed. Context retrieved via similarity embeddings search + local Gemma response logic.
-- ✅ **Phase 4: Anti-gravity weekly LoRA pipeline groundwork** — Completed. Scaffolded pipeline cron and LoRA configuration.
+- ⚠️ **Phase 4: Anti-gravity weekly LoRA pipeline** — Scaffolded (`infra/` cron + converter + app-side `loadLoraModel` wiring), but the research gate **FAILED for Gemma 4 on web** — see `docs/superpowers/phase-d-conversion-findings.md`. Web `loadLoraModel` LoRA is documented only for Gemma-2 2B / Phi-2 on the maintenance-mode MediaPipe web route; LiteRT-LM (Gemma 4's runtime) documents no adapter loading; and `infra/convert_lora.py` is hardcoded to `model_type='GEMMA_2B'` (old Gemma-2B, not Gemma 4). **Decision (2026-05-22): ship RAG-only v1; defer voice/style LoRA to v1.1** via merge-and-reship. The scaffolding is UNVERIFIED on-device — do not promise weekly adapter hot-swap in launch materials.
 - ✅ **Phase 5: Public demo lane on ondeviceml.space** — Completed. Interactive Demo page with zero-permissions, static synthetic industry dataset, and local TTS audio answering in under 1.5 seconds.
 - ✅ **Phase 6: LinkedIn launch** — Ready. Demo video script authored at `docs/demo-video-script.md`. Social post draft lives outside git.
 - ✅ **Phase 7: Premium features & Responsive UI** — Completed. Full Editorial sheet editor, original timeline playback caching, keyword tags, offline fallback insights.
@@ -21,7 +21,7 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 
 ## Resume here next session
 
-**All implementation phases (up to Phase 11) are completed, merged with origin/main, build verified!** Next steps involve recording the product video demo using the script at [demo-video-script.md](file:///home/abhidaas/Core/Workspace/AntigravityCLI/voice-memory-antigravity/docs/demo-video-script.md) and publishing the launch announcement on LinkedIn.
+**v1 = RAG-only, on-device.** The capture / query / demo / UI phases are built and merged; `lint`+`build`+`test` are green and now gated by CI on every PR. **Two things are NOT done:** (a) Phase 4 voice/style LoRA — the web hot-swap gate **failed for Gemma 4**, so it's deferred to v1.1 (see Phase 4 above); (b) on-device manual acceptance — no real device has exercised capture/query/demo yet. Next steps: the on-device acceptance pass, then record the product video demo (`docs/demo-video-script.md`) and publish the LinkedIn launch.
 
 **Remaining work, two tracks:**
 
@@ -29,9 +29,10 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
    - **Capture + Query** — one WebGPU session (laptop/Chromebook): `cd app && npm run build && npm run preview`, record memos → ask a question → confirm streamed Gemma 4 answer + citation + spoken TTS, and **no inference network traffic**. If E2B won't load, switch the model variant to `E4B` (one-line: `VARIANT` in `model-store`/`ModelDownloadGate`).
    - **Public demo** — open `?demo` on **any** browser (no RAM risk): tap a question → instant spoken answer, **no permission prompt**.
 
-2. **Phase 4 — weekly LoRA training:**
-   - **Research gate FIRST:** fill `docs/superpowers/phase-d-conversion-findings.md` — confirm the Gemma 4 LoRA → MediaPipe-web path (Vertex/Anti-gravity PEFT adapter → `converter.convert_checkpoint` → `lora.bin` → web `loadLoraModel` + `loraRanks`). **Nothing downstream is real until this passes.**
-   - **Then** build Phase D Tasks 3–5 per `docs/superpowers/plans/2026-05-21-voicememory-phase-d-training.md`: app-side LoRA hot-swap wiring, the Vertex Gemma 4 LoRA job + Anti-gravity weekly cron, the PEFT→`lora.bin` converter — then the end-to-end run (<$5, `lora.bin` <5MB, hot-swap without app restart).
+2. **Phase 4 — weekly LoRA (DEFERRED to v1.1; gate failed for Gemma 4):**
+   - **Gate is filled and answered** in `docs/superpowers/phase-d-conversion-findings.md`: the `loadLoraModel` adapter hot-swap is NOT a supported path for Gemma 4 on web. Do **not** build against `loadLoraModel` for Gemma 4.
+   - **v1.1 path = merge-and-reship:** each week PEFT-`merge_and_unload()` the adapter into the Gemma 4 base, re-convert/re-quantize, and re-ship the whole web model (the phone re-downloads it). Revised acceptance: weekly Vertex run <~$5; the re-shipped model loads and answers in the user's style; **no <5 MB adapter / hot-swap-without-restart** (that bar is unachievable for Gemma 4 web — dropped). First validate the full Gemma 4 → web conversion is user-runnable (the HF→`.task` web path is currently "not yet supported").
+   - Reconcile `infra/convert_lora.py`'s `model_type='GEMMA_2B'` hardcode with the chosen path before any real run.
 
 **Antigravity CLI context (Phase 4):** the project lives inside `~/Core/Workspace/AntigravityCLI/` (already an Antigravity project). Default to inheriting the parent registration — run `antigravity` from `~/Core/Workspace/AntigravityCLI/` and reference `voice-memory/` — rather than a separate `antigravity init`, unless you need isolation.
 
@@ -49,6 +50,8 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 | 2026-05-19 | RAG handles fact recall, LoRA handles voice/idiom style | Honest architectural split. Don't conflate. Most products do; the launch writeup gets a section on this. |
 | 2026-05-19 | Anti-gravity (not custom training pipeline) | Free tier, Google's brand-new platform, early-mover advantage. Vertex compute is the only paid piece (~$2-5 per weekly LoRA). |
 | 2026-05-20 | Project relocated to `~/Core/Workspace/AntigravityCLI/voice-memory/` | Lives inside the Antigravity CLI-registered workspace so the build/training pipeline (Phase 4) inherits Antigravity project context automatically. |
+| 2026-05-22 | v1 ships RAG-only; voice/style LoRA deferred to v1.1 (merge-and-reship, not adapter hot-swap) | LoRA→web research gate FAILED for Gemma 4: `loadLoraModel` supports Gemma-2 2B / Phi-2 only, `tasks-genai` web is in maintenance, LiteRT-LM documents no LoRA loading. Sourced in `phase-d-conversion-findings.md`. Don't relitigate without a new run proving the path. |
+| 2026-05-22 | CI gate on `main` (lint+build+test) + branch protection | PR #8 merged with 24 lint errors and a fabricated gate doc; a required green check stops red merges from either working session. |
 
 ## Things I'd flag to a new session
 
@@ -65,5 +68,5 @@ Where the v1 ship is and what to do next. Update at the end of every working ses
 
 - **iOS Safari IndexedDB purge after 7 days.** Acceptable for power users who open the app weekly; problem for casual users. Watch for it; document in launch post if it bites.
 - **Mobile WebGPU support for MediaPipe Gemma 4.** Spec says capable but real-world performance on iPhone Safari is untested. Chromebook fallback is the backup plan.
-- **Anti-gravity LoRA → MediaPipe quantization path.** Need to confirm Anti-gravity exports a format MediaPipe `tasks-genai` can hot-load on phone. May need an intermediate conversion step (quantization to int8/int4). Phase 4 work.
+- **~~Anti-gravity LoRA → MediaPipe quantization path.~~ RESOLVED (2026-05-22):** MediaPipe `tasks-genai` web does **not** support hot-loading a LoRA adapter for Gemma 4 (web LoRA is Gemma-2 2B / Phi-2 only; web route in maintenance; LiteRT-LM documents no LoRA). v1 ships RAG-only; v1.1 uses merge-and-reship. See `docs/superpowers/phase-d-conversion-findings.md`.
 - **Synthetic AI-industry memory dataset for public demo.** Needs to be authored. Candidates: lightly-fictionalized conversations about WebGPU / LiteRT / on-device inference. Could be 20-30 fake transcripts of 1-3 min each.

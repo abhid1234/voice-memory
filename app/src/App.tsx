@@ -1086,7 +1086,7 @@ function App() {
           </div>
           <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <LogoIcon className="mini-logo" size={24} />
-            <span className="site-title" style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-main)' }}>VoiceMemory</span>
+            <span className="site-title" style={{ fontWeight: 700, fontSize: 'var(--fs-lg)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
         </div>
         
@@ -1095,7 +1095,7 @@ function App() {
             className="theme-toggle-btn-icon"
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             title="Toggle Theme"
-            style={{ fontSize: '1.1rem' }}
+            style={{ fontSize: 'var(--fs-lg)' }}
           >
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
@@ -1115,7 +1115,7 @@ function App() {
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <LogoIcon className="sidebar-logo" size={28} />
-            <span className="sidebar-title" style={{ fontWeight: 700, fontSize: '1.3rem', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
+            <span className="sidebar-title" style={{ fontWeight: 700, fontSize: 'var(--fs-xl)', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
           <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar">✕</button>
         </div>
@@ -1179,7 +1179,7 @@ function App() {
             <div className="cloud-sync-subtext">Up to date</div>
           </div>
           
-          <div className="sidebar-footer-info" style={{ padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div className="sidebar-footer-info" style={{ padding: '0.5rem', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
             <div className="engine-status" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
               <span className="status-dot online" style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-bright)', display: 'inline-block' }}></span>
               <span>Local AI Engine Active</span>
@@ -1267,7 +1267,7 @@ function App() {
                   <span className="status-value">{statusText}</span>
                 </div>
 
-                <div className="manual-import-row" style={{ marginTop: '0.8rem', textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                <div className="manual-import-row" style={{ marginTop: '0.8rem', textAlign: 'center', fontSize: 'var(--fs-sm)', color: 'var(--text-muted)' }}>
                   <span>Or drag audio here or </span>
                   <button 
                     type="button" 
@@ -1623,7 +1623,7 @@ function App() {
                     <option value="Xenova/whisper-base.en">Base.en (~290MB - Balanced)</option>
                     <option value="Xenova/whisper-small.en">Small.en (~460MB - High Accuracy)</option>
                   </select>
-                  <p className="model-helper-text" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', lineHeight: '1.4' }}>
+                  <p className="model-helper-text" style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: '0.4rem', lineHeight: '1.4' }}>
                     Larger models are more accurate but take longer to download and require more RAM.
                   </p>
                   
@@ -1646,7 +1646,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: 'var(--fs-sm)', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={openDoctor}
                     >
                       🩺 Engine Doctor
@@ -1654,7 +1654,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: 'var(--fs-sm)', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={handleExportBackup}
                     >
                       📤 Export Backup
@@ -1662,7 +1662,7 @@ function App() {
                     <button 
                       type="button"
                       className="sheet-action-btn"
-                      style={{ fontSize: '0.82rem', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
+                      style={{ fontSize: 'var(--fs-sm)', padding: '0.5rem 0.8rem', background: 'var(--sage-bg-hover)', border: '1px solid var(--sage-border)', color: 'var(--text-main)', cursor: 'pointer', borderRadius: '8px' }}
                       onClick={() => fileInputRef.current?.click()}
                     >
                       📥 Import Backup
@@ -1685,8 +1685,8 @@ function App() {
                     <ShieldIcon />
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 0.2rem 0', fontSize: '0.9rem', fontWeight: 600 }}>On-Device Processing</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                    <h4 style={{ margin: '0 0 0.2rem 0', fontSize: 'var(--fs-base)', fontWeight: 600 }}>On-Device Processing</h4>
+                    <p style={{ margin: 0, fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', lineHeight: '1.4' }}>
                       Audio never leaves this machine unless explicitly synced.
                     </p>
                   </div>
@@ -1712,9 +1712,9 @@ function App() {
               </div>
             ) : (
               <div className="section-card empty-state-card">
-                <span style={{ fontSize: '3.5rem', display: 'block', marginBottom: '1rem' }}>🌌</span>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)' }}>No Star Constellation Yet</h3>
-                <p style={{ maxWidth: '400px', margin: '0.5rem auto 0 auto', fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                <span style={{ fontSize: 'var(--fs-3xl)', display: 'block', marginBottom: '1rem' }}>🌌</span>
+                <h3 style={{ fontSize: 'var(--fs-lg)', color: 'var(--text-main)' }}>No Star Constellation Yet</h3>
+                <p style={{ maxWidth: '400px', margin: '0.5rem auto 0 auto', fontSize: 'var(--fs-base)', color: 'var(--text-muted)', lineHeight: '1.5' }}>
                   Transcribe and save voice memories to build your interactive personal memory universe.
                 </p>
               </div>
@@ -1793,7 +1793,7 @@ function App() {
                       onChange={(e) => setTimelineFilterAudioOnly(e.target.checked)}
                       style={{ marginRight: '6px' }}
                     />
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.88rem' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--fs-base)' }}>
                       <svg style={{ width: '14px', height: '14px', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                         <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
@@ -1814,7 +1814,7 @@ function App() {
                       style={{
                         padding: '0.4rem 0.8rem',
                         borderRadius: '20px',
-                        fontSize: '0.85rem',
+                        fontSize: 'var(--fs-base)',
                         border: '1px solid var(--sage-border)',
                         background: selectedTagFilter === null ? 'var(--sage-accent)' : 'transparent',
                         color: selectedTagFilter === null ? '#fff' : 'var(--text-main)',
@@ -1841,7 +1841,7 @@ function App() {
                         style={{
                           padding: '0.4rem 0.8rem',
                           borderRadius: '20px',
-                          fontSize: '0.85rem',
+                          fontSize: 'var(--fs-base)',
                           border: '1px solid var(--sage-border)',
                           background: selectedTagFilter === tag ? 'var(--sage-accent)' : 'transparent',
                           color: selectedTagFilter === tag ? '#fff' : 'var(--text-main)',
@@ -2292,14 +2292,14 @@ function App() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600 }}>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-lg)', fontWeight: 600 }}>
                 {tourSteps[tourStep].title}
               </h4>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
                 {tourStep + 1} / {tourSteps.length}
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+            <p style={{ margin: 0, fontSize: 'var(--fs-base)', color: 'var(--text-muted)', lineHeight: '1.5' }}>
               {tourSteps[tourStep].content}
             </p>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
@@ -2314,7 +2314,7 @@ function App() {
                   border: 'none',
                   color: 'var(--text-muted)',
                   cursor: 'pointer',
-                  fontSize: '0.85rem'
+                  fontSize: 'var(--fs-base)'
                 }}
               >
                 Skip Tour
@@ -2336,7 +2336,7 @@ function App() {
                   padding: '0.4rem 1rem',
                   borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  fontSize: '0.85rem',
+                  fontSize: 'var(--fs-base)',
                   fontWeight: 600
                 }}
               >
@@ -2526,7 +2526,7 @@ function TimelineCard({ memo, onLoad, onDelete }: { memo: VoiceMemo; onLoad: (m:
           {memo.audioBlob && memo.audioBlob.size > 0 ? (
             <TimelineAudioPlayer audioBlob={memo.audioBlob} />
           ) : (
-            <span className="no-audio-text" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <span className="no-audio-text" style={{ fontSize: 'var(--fs-base)', color: 'var(--text-muted)' }}>
               📄 Text-only memory
             </span>
           )}
@@ -2543,7 +2543,7 @@ function TimelineCard({ memo, onLoad, onDelete }: { memo: VoiceMemo; onLoad: (m:
               color: 'var(--text-main)',
               padding: '0.4rem 0.8rem',
               borderRadius: '8px',
-              fontSize: '0.82rem',
+              fontSize: 'var(--fs-sm)',
               cursor: 'pointer',
               fontWeight: 500,
               display: 'inline-flex',
@@ -2567,7 +2567,7 @@ function TimelineCard({ memo, onLoad, onDelete }: { memo: VoiceMemo; onLoad: (m:
               color: '#dc3545',
               padding: '0.4rem 0.8rem',
               borderRadius: '8px',
-              fontSize: '0.82rem',
+              fontSize: 'var(--fs-sm)',
               cursor: 'pointer',
               fontWeight: 500,
               display: 'inline-flex',
@@ -2821,7 +2821,7 @@ function GalaxyMap({
         onClick={handleClick}
         style={{ display: 'block', width: '100%', height: '100%' }}
       />
-      <div className="galaxy-map-hud" style={{ position: 'absolute', top: '10px', left: '15px', pointerEvents: 'none', fontFamily: 'var(--font-sans)', fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div className="galaxy-map-hud" style={{ position: 'absolute', top: '10px', left: '15px', pointerEvents: 'none', fontFamily: 'var(--font-sans)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         🌌 Semantic Galaxy Map ({history.length} stars)
       </div>
       
@@ -2844,16 +2844,16 @@ function GalaxyMap({
             animation: 'fadeIn 0.15s ease-out'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>
             <span>{new Date(hoveredMemo.memo.timestamp).toLocaleDateString()}</span>
             {hoveredMemo.memo.tags && hoveredMemo.memo.tags.length > 0 && (
               <span style={{ color: 'var(--accent-bright)' }}>#{hoveredMemo.memo.tags.join(', #')}</span>
             )}
           </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-main)', lineBreak: 'anywhere', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
+          <p style={{ margin: 0, fontSize: 'var(--fs-base)', color: 'var(--text-main)', lineBreak: 'anywhere', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '1.4' }}>
             {hoveredMemo.memo.transcript}
           </p>
-          <div style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 'bold' }}>
+          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 'bold' }}>
             🖱️ Click to load memory into editor
           </div>
         </div>
