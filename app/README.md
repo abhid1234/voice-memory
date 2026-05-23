@@ -1,6 +1,6 @@
 # VoiceMemory PWA
 
-A privacy-first, on-device personal voice-memory system that runs in your mobile browser as a Progressive Web App (PWA). Capture short voice memos, ask voice queries about your recorded memories completely offline, and train a weekly custom LoRA adapter on Vertex AI using your transcripts to personalize Gemma 4's responses in your own voice and style.
+A privacy-first, on-device personal voice-memory system that runs in your mobile browser as a Progressive Web App (PWA). Capture short voice memos and ask voice queries about your recorded memories completely offline using on-device RAG (Gemma 4). Weekly custom LoRA style personalization is deferred to v1.1 due to Gemma 4 web LoRA gate failure (see STATUS.md).
 
 ---
 
@@ -13,7 +13,7 @@ A privacy-first, on-device personal voice-memory system that runs in your mobile
   - **Galaxy Map**: Interactive HTML5 Canvas constellation map visualising memories as interconnected stars over time.
   - **Onboarding Spotlight**: SVG-masked interactive tutorial tour for first-time setup.
   - **Theme Switcher**: Organic persisted HSL themes (Emerald, Violet, Ocean, Amber) with instant light/dark toggle.
-- **Weekly LoRA Personalization**: Anti-gravity weekly cron pipeline fine-tunes Gemma 4 on custom transcripts. Shipped as a `< 5MB` serialized `lora.bin` adapter, hot-swappable in the WebGPU runtime without app restart.
+- **Weekly LoRA Personalization (Deferred to v1.1)**: Fine-tuning Gemma 4 on custom transcripts via an Anti-gravity cron pipeline is deferred to v1.1 due to Gemma 4 web LoRA gate failure.
 - **Zero-Permission Public Demo**: Precomputed synthetic memories and local TTS reading responses instantly under 1.5 seconds without microphone or hardware permissions.
 - **Premium Utilities**: Drag-and-drop `.mp3`/`.wav`/`.webm` audio imports, editorial sheet editor with diff view, Web Audio sound synthesis feedback, and rich Markdown/HTML export drawers.
 
@@ -21,12 +21,12 @@ A privacy-first, on-device personal voice-memory system that runs in your mobile
 
 ## 🛠️ Architecture: RAG + LoRA Split
 
-VoiceMemory separates retrieval (facts) from style (voice) to maximize on-device efficiency:
+VoiceMemory separates retrieval (facts) from style (voice) to maximize on-device efficiency. Note: Style personalization via LoRA is deferred to v1.1 (RAG-only for v1).
 
-| Capability | Mechanism | Location | Frequency |
-|---|---|---|---|
-| **Fact Recall** | RAG via local IndexedDB embeddings | On-Device (WebGPU) | Live / Every Query |
-| **Voice Style** | LoRA fine-tune adapter | Vertex AI (via Anti-gravity) | Weekly Cron |
+| Capability | Mechanism | Location | Frequency | Status in v1 |
+|---|---|---|---|---|
+| **Fact Recall** | RAG via local IndexedDB embeddings | On-Device (WebGPU) | Live / Every Query | ✅ Active |
+| **Voice Style** | LoRA fine-tune adapter | Vertex AI (via Anti-gravity) | Weekly Cron | ⚠️ Deferred to v1.1 |
 
 ---
 
