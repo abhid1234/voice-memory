@@ -68,6 +68,40 @@ const ShieldIcon = () => (
   </svg>
 );
 
+const LogoIcon = ({ className = 'app-logo', size = 24 }: { className?: string, size?: number }) => (
+  <svg 
+    className={className} 
+    style={{ width: `${size}px`, height: `${size}px`, display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} 
+    viewBox="0 0 32 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Soft glowing ambient circle */}
+    <circle cx="16" cy="16" r="14" fill="var(--accent-light)" opacity="0.6" />
+    
+    {/* Outer ring */}
+    <circle cx="16" cy="16" r="13" stroke="var(--accent-color)" strokeWidth="1.5" strokeOpacity="0.3" />
+    
+    {/* Dual helix overlapping soundwaves */}
+    <path 
+      d="M 6,16 Q 9,9 11,16 T 16,16 T 21,16 T 26,16" 
+      stroke="var(--accent-color)" 
+      strokeWidth="2.2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+    <path 
+      d="M 6,16 Q 9,23 11,16 T 16,16 T 21,16 T 26,16" 
+      stroke="var(--accent-bright)" 
+      strokeWidth="1.2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      opacity="0.45" 
+    />
+  </svg>
+);
+
+
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
     <circle cx="12" cy="12" r="3" />
@@ -414,10 +448,25 @@ function App() {
       return;
     }
 
+    let targetId = step.targetId;
+    if (targetId === 'tour-header-nav' && window.innerWidth <= 768) {
+      targetId = 'tour-mobile-nav';
+    }
+
+    // Scroll target into view once when step starts (avoiding resize/scroll listener recursion)
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     const updateRect = () => {
-      const element = document.getElementById(step.targetId);
-      if (element) {
-        setSpotlightRect(element.getBoundingClientRect());
+      let currentTargetId = step.targetId;
+      if (currentTargetId === 'tour-header-nav' && window.innerWidth <= 768) {
+        currentTargetId = 'tour-mobile-nav';
+      }
+      const el = document.getElementById(currentTargetId);
+      if (el) {
+        setSpotlightRect(el.getBoundingClientRect());
       } else {
         setSpotlightRect(null);
       }
@@ -1036,7 +1085,7 @@ function App() {
             <ShieldIcon />
           </div>
           <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/sleek-logo.png" className="mini-logo" alt="logo" style={{ height: '24px' }} />
+            <LogoIcon className="mini-logo" size={24} />
             <span className="site-title" style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
         </div>
@@ -1065,7 +1114,7 @@ function App() {
       <aside className={`app-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/sleek-logo.png" className="sidebar-logo" alt="logo" style={{ height: '28px' }} />
+            <LogoIcon className="sidebar-logo" size={28} />
             <span className="sidebar-title" style={{ fontWeight: 700, fontSize: '1.3rem', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
           <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar">✕</button>
@@ -1157,7 +1206,7 @@ function App() {
                 onDrop={handleDrop}
                 style={{ position: 'relative' }}
               >
-                <h3 className="section-title">Voice Controls</h3>
+                <h4 className="section-title">Voice Controls</h4>
                 
                 {isDragging && (
                   <div className="drag-drop-overlay">
@@ -1251,7 +1300,7 @@ function App() {
                 <div className="sheet-header">
                   <div className="sheet-title-group">
                     <span className="doc-badge">DRAFT</span>
-                    <h4 className="sheet-title">AI Voice Draft</h4>
+                    <h3 className="sheet-title">AI Voice Draft</h3>
                   </div>
                   
                   <div className="sheet-actions">
@@ -1405,7 +1454,7 @@ function App() {
                 {/* AI Engine Model Card */}
                 <div className="section-card bottom-grid-card">
                   <div className="bottom-grid-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                    <h3 className="section-title" style={{ margin: 0 }}>AI Engine Model</h3>
+                    <h4 className="section-title" style={{ margin: 0 }}>AI Engine Model</h4>
                     <span className="whisper-v3-badge">Whisper v3</span>
                   </div>
                   <div className="model-segmented-control">
@@ -1426,23 +1475,6 @@ function App() {
                         {model === 'Xenova/whisper-base.en' && 'Balanced'}
                         {model === 'Xenova/whisper-small.en' && 'Accuracy'}
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Workspace Accent Card */}
-                <div className="section-card bottom-grid-card">
-                  <h3 className="section-title" style={{ marginBottom: '0.8rem' }}>Workspace Accent</h3>
-                  <div className="accent-color-circles">
-                    {(['emerald', 'violet', 'ocean', 'amber'] as const).map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`accent-circle-btn ${color} ${accentTheme === color ? 'active' : ''}`}
-                        onClick={() => setAccentTheme(color)}
-                        title={`Switch to ${color} theme`}
-                        aria-label={`Switch to ${color} theme`}
-                      />
                     ))}
                   </div>
                 </div>
@@ -1481,7 +1513,7 @@ function App() {
 
               {/* Writing Format Style Card */}
               <div className="section-card">
-                <h3 className="section-title">Writing Format Style</h3>
+                <h4 className="section-title">Writing Format Style</h4>
                 <div className="style-vertical-list" id="tour-style-select">
                   {(['cleaned', 'bullets', 'email', 'slack', 'custom', 'raw'] as const).map((style) => (
                     <button
@@ -1523,7 +1555,7 @@ function App() {
 
               {/* Personal Vocabulary Card */}
               <div className="section-card">
-                <h3 className="section-title">Personal Vocabulary</h3>
+                <h4 className="section-title">Personal Vocabulary</h4>
                 <div className="dictionary-editor-group">
                   <label className="input-label">Keywords parsed phonetically:</label>
                   
@@ -1571,7 +1603,7 @@ function App() {
 
               {/* AI Engine Settings */}
               <div className="section-card desktop-hidden">
-                <h3 className="section-title">AI Engine Settings</h3>
+                <h4 className="section-title">AI Engine Settings</h4>
                 <div className="dictionary-editor-group">
                   <label className="input-label">Whisper Model Weight:</label>
                   <select 
@@ -1910,7 +1942,7 @@ function App() {
               </div>
               
               <div className="section-card vault-metrics-card">
-                <h3 className="section-title" style={{ marginBottom: '1.25rem' }}>Storage Diagnostics</h3>
+                <h4 className="section-title" style={{ marginBottom: '1.25rem' }}>Storage Diagnostics</h4>
                 
                 <div className="vault-metric-row">
                   <span>IndexedDB Usage</span>
@@ -1964,10 +1996,18 @@ function App() {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="mobile-nav-bar">
+      <nav className="mobile-nav-bar" id="tour-mobile-nav">
         <button 
           className={`mobile-nav-btn ${activeTab === 'dictation' ? 'active' : ''}`}
           onClick={() => setActiveTab('dictation')}
+        >
+          <MicIcon />
+          <span>Dictate</span>
+          <span className="active-dot"></span>
+        </button>
+        <button 
+          className={`mobile-nav-btn ${activeTab === 'memories' ? 'active' : ''}`}
+          onClick={() => setActiveTab('memories')}
         >
           <MemoriesIcon />
           <span>Memories</span>
@@ -2225,14 +2265,15 @@ function App() {
                     width: '320px'
                   };
                 }
-                const placeAbove = spotlightRect.bottom > window.innerHeight - 240;
+                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 200;
                 const topVal = placeAbove 
-                  ? `${spotlightRect.top - 200}px` 
+                  ? `${spotlightRect.top - 16}px` 
                   : `${spotlightRect.bottom + 16}px`;
                 const leftVal = `${Math.max(16, Math.min(window.innerWidth - 336, spotlightRect.left + spotlightRect.width / 2 - 160))}px`;
                 return {
                   top: topVal,
                   left: leftVal,
+                  transform: placeAbove ? 'translateY(-100%)' : 'none',
                   width: '320px',
                   transition: 'all 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
                 };

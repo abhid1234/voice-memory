@@ -1,6 +1,6 @@
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
   --font-display: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
@@ -28,6 +28,12 @@
   --radius-lg: 16px; /* 1rem per DESIGN.md */
   --radius-md: 12px; /* 0.75rem */
   --radius-sm: 8px; /* 0.5rem */
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 :root[data-accent="emerald"] {
@@ -1510,7 +1516,7 @@ body {
   padding-bottom: 0.75rem;
 }
 .export-modal-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.35rem;
   margin: 0;
   color: var(--text-main);
@@ -1651,7 +1657,7 @@ body {
   margin-bottom: 0.35rem;
 }
 .pwa-install-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.05rem;
   margin: 0 0 0.2rem 0;
   color: var(--text-main);
@@ -1893,7 +1899,7 @@ body {
   padding-bottom: 0.75rem;
 }
 .doctor-modal-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: 1.35rem;
   margin: 0;
   color: var(--text-main);
@@ -2114,8 +2120,8 @@ body {
 
 /* Global Typographic Adjustments */
 h1, h2, h3, h4, h5, h6, .site-title, .workspace-heading {
-  font-family: var(--font-display) !important;
-  letter-spacing: -0.02em !important;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
 
 body {
@@ -2423,6 +2429,15 @@ body {
   
   .mobile-menu-btn:active, .settings-gear-btn:active {
     transform: scale(0.92);
+  }
+
+  .mobile-menu-btn, .theme-toggle-btn-icon, .settings-gear-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .segment-btn, .style-list-btn {
+    min-height: 44px;
   }
   
   .mobile-actions {
@@ -2817,6 +2832,9 @@ body {
   font-size: 0.88rem;
   color: var(--text-main);
   font-weight: 500;
+  word-break: break-all;
+  max-width: 65%;
+  text-align: right;
 }
 
 .vault-action-btn {
@@ -3096,4 +3114,175 @@ body {
 .inline-vocab-add-btn:hover {
   background: var(--accent-color);
   color: #fff;
+}
+
+/* ==========================================================================
+   MODEL SELECTION SEGMENT CONTROL & MODEL DOWNLOAD GATE PREMIUM STYLES
+   ========================================================================== */
+
+.model-segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: rgba(14, 21, 17, 0.4);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+}
+
+.model-segment-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.6rem 0.5rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.model-segment-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.model-segment-btn.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .model-segment-btn.active {
+  color: #0e1511;
+}
+
+[data-theme="light"] .model-segmented-control {
+  background: rgba(43, 41, 38, 0.04);
+}
+
+.model-gate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 600px;
+  margin: 2rem auto;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .model-gate-card {
+  background: rgba(22, 29, 25, 0.45);
+  backdrop-filter: blur(20px);
+}
+
+.model-gate-card.warning-card,
+.model-gate-card.error-card {
+  border-color: rgba(201, 59, 85, 0.3);
+}
+
+.model-gate-card .status-text {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0.5rem 0 1.5rem 0;
+  max-width: 480px;
+}
+
+.model-gate-card .gate-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.gate-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--card-border);
+  border-top: 3px solid var(--accent-color);
+  border-radius: 50%;
+  animation: gateSpinnerRotate 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes gateSpinnerRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.warning-icon, .error-icon, .sparkle-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.sparkle-icon {
+  color: var(--accent-color);
+}
+
+.gate-btn {
+  background: var(--accent-color);
+  color: var(--bg-color);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  padding: 0.8rem 1.6rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.gate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--accent-light);
+  filter: brightness(1.08);
+}
+
+.gate-btn:active {
+  transform: translateY(0);
+}
+
+
+.progress-bar-container {
+  width: 100%;
+  max-width: 400px;
+  height: 8px;
+  background: var(--card-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-bright) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease-out;
+}
+
+.progress-percent {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent-bright);
 }
