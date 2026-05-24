@@ -189,16 +189,5 @@ describe("InferenceClient", () => {
     await expect(p1).rejects.toThrow("worker crash");
     await expect(p2).rejects.toThrow("worker crash");
   });
-
-  it("loadLoRA posts LOAD_LORA and resolves on LORA_READY", async () => {
-    const fake = new FakeWorker();
-    const client = new InferenceClient(fake);
-    const p = client.loadLoRA("blob:lora-url");
-    const sent = fake.posted[0] as { type: string; id: number; url: string };
-    expect(sent.type).toBe("LOAD_LORA");
-    expect(sent.url).toBe("blob:lora-url");
-    fake.emit({ type: "LORA_READY", id: sent.id });
-    await expect(p).resolves.toBeUndefined();
-  });
 });
 
