@@ -82,10 +82,11 @@ describe("ModelDownloadGate", () => {
     vi.mocked(modelStore.isModelCached).mockResolvedValue(false);
 
     let progressCb: any = null;
+    let resolveDownload: (() => void) | null = null;
     vi.mocked(modelStore.downloadModel).mockImplementation(async (_variant, onProgress) => {
       progressCb = onProgress;
       return new Promise<void>((resolve) => {
-        setTimeout(resolve, 50);
+        resolveDownload = resolve;
       });
     });
 
@@ -109,6 +110,11 @@ describe("ModelDownloadGate", () => {
     });
 
     expect(container.textContent).toContain("50%");
+
+    // Complete download
+    await act(async () => {
+      resolveDownload?.();
+    });
   });
 
   it("reverts to needs-download state if downloadModel fails", async () => {
