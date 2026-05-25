@@ -49,10 +49,8 @@ export class InferenceClient {
       text?: string;
       error?: string;
     };
-    if (msg.type === "READY" || msg.type === "LORA_READY") {
-      if (msg.type === "READY") {
-        this.ready = true;
-      }
+    if (msg.type === "READY") {
+      this.ready = true;
       if (msg.id != null) {
         const p = this.pending.get(msg.id);
         if (p) {
@@ -98,22 +96,6 @@ export class InferenceClient {
     });
     return this.initPromise;
   }
-
-  /**
-   * Load a converted LoRA FlatBuffer model into the running inference session.
-   */
-  loadLoRA(url: string): Promise<void> {
-    const id = this.nextId++;
-    return new Promise<void>((resolve, reject) => {
-      this.pending.set(id, {
-        resolve: () => resolve(),
-        reject,
-        onToken: () => {},
-      });
-      this.worker.postMessage({ type: "LOAD_LORA", id, url });
-    });
-  }
-
 
   generateResponse(
     query: string,
