@@ -15,7 +15,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Spotlight Tour Click Interception**: Resolved a usability issue where the tour overlay blocked mouse clicks to highlighted target elements underneath, and fixed potential off-screen tooltip rendering.
 - **Tour Tab Change Graceful Exit**: Automatically cancel the onboarding tour if the user manually switches tabs away from the target panel to prevent visual unmount glitches.
-- **Writing Style Selection Layout**: Properly structured the writing style list items in a vertical column layout with descriptive subtexts for each formatting preset.
+- **Writing Style Selection Layout**: Scan and select writing styles more easily with list items structured in a clean vertical column layout with descriptive subtexts for each formatting preset.
+
 
 ## [0.0.0.4] - 2026-05-22
 

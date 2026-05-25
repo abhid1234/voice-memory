@@ -1,12 +1,12 @@
 # Spec — VoiceMemory v1
 
-**Status:** Bundle B locked via D2 (2026-05-19), scaffold complete, Phase 1 (PWA shell) is next
+**Status:** v1 core features (RAG-only) built, merged, build-verified; next is on-device acceptance & launch demo.
 **Owner:** Abhi Das
 **Project:** I in `RL & Agentic AI Project Pipeline` tracker
 
 ## What this is
 
-A PWA personal voice-memory system. Voice in / voice out on phone. On-device Gemma 4 (via MediaPipe `tasks-genai`) for inference. Anti-gravity 2.0 weekly LoRA fine-tunes the model on the user's own transcripts so it gradually starts answering in their voice/style. Public demo lane lives on ondeviceml.space using synthetic memory so strangers can experience the magic with zero permissions.
+**VoiceMemory** — a PWA personal voice-memory system. Voice in / voice out on phone. On-device Gemma 4 (via MediaPipe `tasks-genai`) for inference. Personalization via weekly LoRA fine-tunes is deferred to v1.1 due to Gemma 4 web LoRA gate failure (v1 ships RAG-only). Public demo lane lives on ondeviceml.space using synthetic memory so strangers can experience the magic with zero permissions.
 
 Direct response to the Google I/O '26 Developer Keynote demo (voice → fine-tune Gemma 4 in minutes) — extended into a continually-improving system that lives in your pocket.
 
@@ -76,29 +76,26 @@ The unique combination: **on-device + continual + voice-loop + public demo with 
 | LoRA training | Gemma 4 base + LoRA adapter | LoRA delta < 5MB, hot-swappable on phone |
 | TTS | Browser Web Speech API | Free, on-device, no model to load |
 
-## File scaffolding (Phase 1)
+## Shipped File Structure
 
 ```
-app/
-├── src/
-│   ├── App.tsx                      # Top-level route + nav
-│   ├── pages/
-│   │   ├── Record.tsx               # Tap-to-record + live transcript
-│   │   ├── Query.tsx                # Hold-to-talk query + voice-answer
-│   │   └── Timeline.tsx             # Chronological captures list
-│   ├── lib/
-│   │   ├── stt.ts                   # Whisper.cpp wrapper
-│   │   ├── inference.ts             # MediaPipe Gemma 4 wrapper
-│   │   ├── rag.ts                   # RAG over IndexedDB
-│   │   └── storage.ts               # IndexedDB schema + CRUD
-│   └── components/
-│       ├── RecordButton.tsx
-│       ├── TranscriptScroll.tsx
-│       └── CitationChip.tsx
-├── public/
-│   ├── manifest.json                # PWA manifest, theme, icons
-│   └── icons/                       # PWA icons (multiple sizes)
-└── sw.js                            # service worker (offline + caching)
+voice-memory/
+├── docs/
+│   ├── spec.md                     # Full v1 spec, scope tradeoffs, phase plan
+│   ├── demo-video-script.md        # Video walkthrough script
+│   └── superpowers/
+│       └── phase-d-conversion-findings.md  # LoRA conversion findings & signatures
+├── app/                            # Vite PWA
+│   ├── src/
+│   │   ├── components/             # Reusable UI elements (ModelDownloadGate.tsx, etc.)
+│   │   ├── pages/                  # Page routes (Demo.tsx, etc.)
+│   │   ├── lib/                    # Logic modules (stt, inference, rag, storage, synth, flow, diff)
+│   │   ├── data/                   # Synthetic demo dataset & questions
+│   │   ├── App.tsx                 # Core layout, state, routing, and screens
+│   │   └── App.css                 # Ethereal design system styles and layout
+│   ├── public/                     # Static assets, Web Workers (whisper-worker.js, manifest.json, sw.js)
+│   └── package.json
+└── infra/                          # Weekly Vertex LoRA training pipeline
 ```
 
 ## Phase plan (mirrors STATUS.md)
@@ -115,9 +112,9 @@ app/
 ## Acceptance criteria for v1 launch
 
 - ✅ Tap record on phone, see live transcript, replay clip offline
-- ✅ Voice query returns text + voice-synthesized answer in <1.5 sec, on-device
-- ✅ Weekly Anti-gravity LoRA fine-tune runs successfully on Vertex with <$5 per run
-- ✅ Quantized LoRA delta hot-swaps on phone without app restart
+- ✅ Voice query returns text + voice-synthesized answer in <1.5 sec, on-device (RAG-only)
+- ⚠️ Weekly Anti-gravity LoRA fine-tune (Deferred to v1.1)
+- ⚠️ Quantized LoRA delta hot-swap on phone (Deferred to v1.1)
 - ✅ Public demo on ondeviceml.space lane works in LinkedIn's in-app browser with zero permission prompts
 - ✅ Demo video produced (script in `docs/demo-video-script.md`, video file outside git per `feedback_social_posts_never_in_git.md`)
 - ✅ Existing ondeviceml.space features still work (no regressions on the other 24 demos)
