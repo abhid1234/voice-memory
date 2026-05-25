@@ -1235,7 +1235,7 @@ function App() {
                     <span className="workspace-intro-feature-icon">🌌</span>
                     <div className="workspace-intro-feature-text">
                       <strong>Constellation Mapping</strong>
-                      <span>Explore semantic connections between your memories visually on an interactive radar map. Closer stars represent memories with similar concepts, tags, or topics, helping you discover patterns in your thoughts.</span>
+                      <span>Explore semantic connections between your memories visually on an interactive radar map. Every saved thought is represented as a star. The closer two stars are on the map, the more semantically or conceptually similar they are, helping you discover patterns in your thoughts.</span>
                     </div>
                   </div>
                 </div>
