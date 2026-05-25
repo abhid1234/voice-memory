@@ -3488,3 +3488,171 @@ body {
   line-height: 1.45;
 }
 
+/* Onboarding / Intro banner styles */
+.workspace-intro-card {
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.workspace-intro-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-light);
+  box-shadow: var(--shadow-md);
+}
+
+.workspace-intro-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--accent-color), var(--accent-bright));
+}
+
+.workspace-intro-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.workspace-intro-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.workspace-intro-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  background: var(--accent-light);
+  color: var(--accent-bright);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.workspace-intro-description {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 1.2rem 0;
+}
+
+.workspace-intro-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.workspace-intro-feature-item {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.workspace-intro-feature-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.workspace-intro-feature-text strong {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.workspace-intro-feature-text span {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: block;
+}
+
+.workspace-intro-steps {
+  border-top: 1px dashed var(--card-border);
+  padding-top: 1rem;
+}
+
+.workspace-intro-steps-title {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.workspace-intro-steps-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.workspace-intro-step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.workspace-intro-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent-bright);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Mobile responsiveness for onboarding cards */
+@media (max-width: 768px) {
+  .workspace-intro-card {
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .workspace-intro-features {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .workspace-intro-steps-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+  
+  .map-intro-card {
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+  }
+  .map-intro-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
