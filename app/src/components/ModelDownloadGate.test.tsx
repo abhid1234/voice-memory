@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import React from "react";
 import ModelDownloadGate from "./ModelDownloadGate";
 import * as modelStore from "../lib/model-store";
 
