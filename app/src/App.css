@@ -39,6 +39,7 @@
   --radius-lg: 16px; /* 1rem per DESIGN.md */
   --radius-md: 12px; /* 0.75rem */
   --radius-sm: 8px; /* 0.5rem */
+  --radius-full: 9999px;
 }
 
 button, input, select, textarea {
@@ -2672,11 +2673,19 @@ body {
 /* User Profile Card Styles */
 .user-profile-card {
   padding: 1.5rem !important;
-  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(24, 24, 27, 0.6) 100%);
+  background: linear-gradient(135deg, var(--card-bg) 0%, var(--accent-light) 100%);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.user-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-color);
 }
 
 .user-profile-card::before {
@@ -2703,16 +2712,21 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--accent-light);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-bright) 100%);
   border: 1.5px solid var(--accent-bright);
-  color: var(--accent-bright);
+  color: var(--card-bg);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--fs-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(78, 222, 163, 0.1);
+  box-shadow: 0 4px 12px var(--accent-light);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.user-profile-card:hover .profile-avatar {
+  transform: scale(1.05) rotate(5deg);
 }
 
 .profile-meta {
@@ -2744,7 +2758,6 @@ body {
   display: flex;
   border-top: 1px solid var(--card-border);
   padding-top: 1rem;
-  gap: 1.5rem;
 }
 
 .profile-stat-item {
@@ -2752,6 +2765,19 @@ body {
   flex-direction: column;
   align-items: flex-start;
   flex: 1;
+  padding: 0 1rem;
+}
+
+.profile-stat-item:first-child {
+  padding-left: 0;
+}
+
+.profile-stat-item:last-child {
+  padding-right: 0;
+}
+
+.profile-stat-item:not(:last-child) {
+  border-right: 1px solid var(--card-border);
 }
 
 .stat-label {
@@ -3056,7 +3082,7 @@ body {
 .profile-badge {
   font-family: var(--font-mono);
   background-color: var(--accent-light);
-  border: 1px solid rgba(78, 126, 96, 0.25);
+  border: 1px solid var(--accent-color);
   color: var(--accent-bright);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -3068,11 +3094,11 @@ body {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  margin-left: 0.5rem;
+  margin-left: 0;
 }
 
 [data-theme="dark"] .profile-badge {
-  border-color: rgba(78, 222, 163, 0.3);
+  border-color: var(--accent-color);
 }
 
 /* Style Vertical List */
