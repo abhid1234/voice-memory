@@ -469,11 +469,7 @@ function App() {
             currentTargetId = 'tour-mobile-nav';
           }
           const el = document.getElementById(currentTargetId);
-          if (el) {
-            setSpotlightRect(el.getBoundingClientRect());
-          } else {
-            setSpotlightRect(null);
-          }
+          setSpotlightRect(el ? el.getBoundingClientRect() : null);
           ticking = false;
         });
         ticking = true;

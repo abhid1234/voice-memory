@@ -48,6 +48,12 @@ button, input, select, textarea {
   line-height: inherit;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 :root[data-accent="emerald"] {
   --accent-color: #4e7e60;
   --accent-light: rgba(78, 126, 96, 0.07);
