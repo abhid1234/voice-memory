@@ -173,7 +173,7 @@ function App() {
 
   // Premium themes and visualization refs
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
   const [selectedModel, setSelectedModel] = useState(() => stt.getCurrentModel());
 
@@ -395,11 +395,12 @@ function App() {
   // Onboarding spotlight tour hooks
   useEffect(() => {
     const isCompleted = localStorage.getItem('onboardingTourCompleted');
-    if (!isCompleted && history.length === 0) {
+    // Never run the onboarding tour on the public zero-permission demo (?demo).
+    if (!isCompleted && history.length === 0 && !isDemoMode) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTourStep(0);
     }
-  }, [history]);
+  }, [history, isDemoMode]);
 
   useEffect(() => {
     if (tourStep === null) {
@@ -1032,9 +1033,6 @@ function App() {
           >
             <MenuIcon />
           </button>
-          <div className="desktop-shield-icon" style={{ color: 'var(--accent-bright)' }}>
-            <ShieldIcon />
-          </div>
           <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src="/sleek-logo.png" className="mini-logo" alt="logo" style={{ height: '24px' }} />
             <span className="site-title" style={{ fontWeight: 700, fontSize: 'var(--fs-lg)', color: 'var(--text-main)' }}>VoiceMemory</span>
@@ -1122,12 +1120,12 @@ function App() {
           <div className="cloud-sync-card">
             <div className="cloud-sync-header">
               <svg className="cloud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.87-1.92-3.5-4-3.5a4.5 4.5 0 0 0-4.5 4.5c0 .35.03.68.08 1A4 4 0 0 0 5 21h12" />
-                <path d="m9 13 2 2 4-4" />
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
               </svg>
-              <span>Cloud Sync</span>
+              <span>On-device</span>
             </div>
-            <div className="cloud-sync-subtext">Up to date</div>
+            <div className="cloud-sync-subtext">Private — nothing synced</div>
           </div>
           
           <div className="sidebar-footer-info" style={{ padding: '0.5rem', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>
@@ -1458,22 +1456,22 @@ function App() {
                   <div className="profile-avatar">A</div>
                   <div className="profile-meta">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span className="profile-name">Deep Thinker</span>
-                      <span className="profile-badge">Premium Plan</span>
+                      <span className="profile-name">You</span>
+                      <span className="profile-badge">On-device</span>
                     </div>
                     <span className="profile-status">
                       <span className="live-dot" style={{ backgroundColor: 'var(--accent-bright)' }}></span>
-                      Secure Intellect Active
+                      Private — on-device only
                     </span>
                   </div>
                 </div>
                 <div className="profile-stats">
                   <div className="profile-stat-item">
-                    <span className="stat-label">Total Memos</span>
+                    <span className="stat-label">Memories</span>
                     <span className="stat-value">{history.length}</span>
                   </div>
                   <div className="profile-stat-item">
-                    <span className="stat-label">Secure Vault</span>
+                    <span className="stat-label">Storage</span>
                     <span className="stat-value">100% Offline</span>
                   </div>
                 </div>

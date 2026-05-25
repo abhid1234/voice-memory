@@ -1218,12 +1218,11 @@ body {
 
 @media (max-width: 500px) {
   .site-header {
-    height: auto;
-    padding: 1rem 1.2rem;
-    flex-direction: column;
-    gap: 0.8rem;
+    height: 65px;
+    padding: 0 1.2rem;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    text-align: center;
   }
   .header-nav {
     width: 100%;
@@ -3106,4 +3105,10 @@ body {
 .inline-vocab-add-btn:hover {
   background: var(--accent-color);
   color: #fff;
+}
+
+/* v1 brand: ship a single confident accent (emerald) and defer the multi-accent
+   switcher. Hides the "Workspace Accent" cards without touching their JSX/state. */
+.section-card:has(.accent-color-circles) {
+  display: none;
 }
