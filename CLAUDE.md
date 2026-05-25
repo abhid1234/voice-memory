@@ -2,18 +2,19 @@
 
 ## What this is
 
-**VoiceMemory** — a PWA personal voice-memory system. Voice in / voice out on phone. On-device Gemma 4 (via MediaPipe) for inference. Anti-gravity 2.0 weekly LoRA fine-tunes the model on the user's own transcripts so it gradually starts answering in their voice/style. Public demo lane lives on ondeviceml.space using synthetic memory so strangers can experience the magic with zero permissions.
+**VoiceMemory** — a PWA personal voice-memory system. Voice in / voice out on phone. On-device Gemma 4 (via MediaPipe) for inference. Personalization via weekly LoRA fine-tunes is deferred to v1.1 due to Gemma 4 web LoRA gate failure (v1 ships RAG-only). Public demo lane lives on ondeviceml.space using synthetic memory so strangers can experience the magic with zero permissions.
 
 Project I in Abhi's `RL & Agentic AI Project Pipeline` tracker. Direct response to the Google I/O '26 Developer Keynote demo (voice → fine-tune Gemma 4 in minutes) — extended into a continually-improving system that lives on the phone.
 
 **Spec:** see `docs/spec.md`.
 **Status:** see `STATUS.md`.
 
-## v1 scope (locked via D2, 2026-05-19)
+## v1 scope (locked via D2, 2026-05-19; updated 2026-05-22)
 
 - Deploy: PWA on phone (Chromebook fallback for inference if mobile WebGPU is rough)
 - Capture: voice memos + post-meeting reflections only, under ~2 min, foreground recording
-- Training: weekly LoRA via Anti-gravity cron, ~$10-15 build + ~$3/wk ongoing
+- RAG: On-device factual queries using IndexedDB context embeddings (RAG-only for v1)
+- Training (Deferred to v1.1): Weekly LoRA style personalization deferred due to Gemma 4 web LoRA gate failure
 - Public demo: zero-permission tap-to-query buttons on ondeviceml.space with synthetic memory
 
 **Explicitly NOT in v1:** live in-meeting capture (deferred to v3 — requires Capacitor.js native shell + two-party-consent UX, blocked by browser background-recording limitation).
@@ -58,7 +59,7 @@ voice-memory/
 - STT: Whisper.cpp (WASM) web worker integration
 - Inference: MediaPipe `tasks-genai` for Gemma 4 quantized on-device
 - TTS: browser Web Speech API (free, on-device)
-- Training: Anti-gravity CLI -> Vertex AI LoRA fine-tune -> quantized LoRA shipped via signed URL
+- Training (Deferred to v1.1): Anti-gravity CLI -> Vertex AI LoRA fine-tune -> quantized LoRA shipped via signed URL (LoRA deferred in v1)
 - Storage: IndexedDB on phone
 
 ## Open design questions resolved by D2

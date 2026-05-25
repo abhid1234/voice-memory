@@ -68,28 +68,38 @@ const ShieldIcon = () => (
   </svg>
 );
 
-// Lightweight, theme-adaptive brand mark (sage in light, mint in dark via --accent-color).
-// The filled emerald tile lives only in the favicon / PWA icons, where a solid icon belongs.
-const LogoMark = ({ size = 24, className }: { size?: number; className?: string }) => (
-  <svg
-    className={className}
-    width={size}
-    height={size}
-    viewBox="0 0 48 48"
-    role="img"
-    aria-label="VoiceMemory"
-    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
+const LogoIcon = ({ className = 'app-logo', size = 24 }: { className?: string, size?: number }) => (
+  <svg 
+    className={className} 
+    style={{ width: `${size}px`, height: `${size}px`, display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} 
+    viewBox="0 0 32 32" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
   >
-    <g fill="var(--accent-color)">
-      <rect x="4" y="19" width="4" height="10" rx="2" />
-      <rect x="13" y="14" width="4" height="20" rx="2" />
-      <rect x="22" y="9" width="4" height="30" rx="2" />
-      <rect x="31" y="14" width="4" height="20" rx="2" />
-      <rect x="40" y="19" width="4" height="10" rx="2" />
-    </g>
+    {/* Soft glowing ambient circle */}
+    <circle cx="16" cy="16" r="14" fill="var(--accent-light)" opacity="0.6" />
+    
+    {/* Outer ring */}
+    <circle cx="16" cy="16" r="13" stroke="var(--accent-color)" strokeWidth="1.5" strokeOpacity="0.3" />
+    
+    {/* Dual helix overlapping soundwaves */}
+    <path 
+      d="M 6,16 Q 9,9 11,16 T 16,16 T 21,16 T 26,16" 
+      stroke="var(--accent-color)" 
+      strokeWidth="2.2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+    <path 
+      d="M 6,16 Q 9,23 11,16 T 16,16 T 21,16 T 26,16" 
+      stroke="var(--accent-bright)" 
+      strokeWidth="1.2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      opacity="0.45" 
+    />
   </svg>
 );
-
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
     <circle cx="12" cy="12" r="3" />
@@ -442,7 +452,7 @@ function App() {
       targetId = 'tour-mobile-nav';
     }
 
-    // Scroll the target into view once when the step starts.
+    // Scroll target into view once when step starts (avoiding resize/scroll listener recursion)
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -484,6 +494,14 @@ function App() {
       }
     }
   }, [tourStep]);
+
+  // Cancel tour if user navigates away from the required tab
+  useEffect(() => {
+    if (tourStep !== null && tourStep >= 1 && tourStep <= 3 && activeTab !== 'dictation') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTourStep(null);
+    }
+  }, [activeTab, tourStep]);
 
   // Mic Visualizer reference
   const recordWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -1074,7 +1092,7 @@ function App() {
             <MenuIcon />
           </button>
           <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <LogoMark className="mini-logo" size={24} />
+            <LogoIcon className="mini-logo" size={24} />
             <span className="site-title" style={{ fontWeight: 700, fontSize: 'var(--fs-lg)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
         </div>
@@ -1103,7 +1121,7 @@ function App() {
       <aside className={`app-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <LogoMark className="sidebar-logo" size={28} />
+            <LogoIcon className="sidebar-logo" size={28} />
             <span className="sidebar-title" style={{ fontWeight: 700, fontSize: 'var(--fs-xl)', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
           <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar">✕</button>
@@ -1467,23 +1485,6 @@ function App() {
                     ))}
                   </div>
                 </div>
-
-                {/* Workspace Accent Card */}
-                <div className="section-card bottom-grid-card">
-                  <h3 className="section-title" style={{ marginBottom: '0.8rem' }}>Workspace Accent</h3>
-                  <div className="accent-color-circles">
-                    {(['emerald', 'violet', 'ocean', 'amber'] as const).map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`accent-circle-btn ${color} ${accentTheme === color ? 'active' : ''}`}
-                        onClick={() => setAccentTheme(color)}
-                        title={`Switch to ${color} theme`}
-                        aria-label={`Switch to ${color} theme`}
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
 
             </div>
@@ -1527,19 +1528,29 @@ function App() {
                       className={`style-list-btn ${dictationStyle === style ? 'active' : ''}`}
                       onClick={() => setDictationStyle(style)}
                     >
-                      {style === 'cleaned' && <SparklesIcon />}
-                      {style === 'bullets' && <ListIcon />}
-                      {style === 'email' && <MailIcon />}
-                      {style === 'slack' && <MessageSquareIcon />}
-                      {style === 'custom' && <EditIcon />}
-                      {style === 'raw' && <FileTextIcon />}
-                      <span>
-                        {style === 'cleaned' && 'Cleaned Transcript'}
-                        {style === 'bullets' && 'Action Bullets'}
-                        {style === 'email' && 'Executive Summary'}
-                        {style === 'slack' && 'Slack Message'}
-                        {style === 'custom' && 'Custom Instruction'}
-                        {style === 'raw' && 'Raw Text'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%' }}>
+                        {style === 'cleaned' && <SparklesIcon />}
+                        {style === 'bullets' && <ListIcon />}
+                        {style === 'email' && <MailIcon />}
+                        {style === 'slack' && <MessageSquareIcon />}
+                        {style === 'custom' && <EditIcon />}
+                        {style === 'raw' && <FileTextIcon />}
+                        <span className="style-btn-title">
+                          {style === 'cleaned' && 'Cleaned Transcript'}
+                          {style === 'bullets' && 'Action Bullets'}
+                          {style === 'email' && 'Executive Summary'}
+                          {style === 'slack' && 'Slack Message'}
+                          {style === 'custom' && 'Custom Instruction'}
+                          {style === 'raw' && 'Raw Text'}
+                        </span>
+                      </div>
+                      <span className="style-btn-desc">
+                        {style === 'cleaned' && 'Remove filler words and stutters smoothly'}
+                        {style === 'bullets' && 'Key takeaways and items in bullet lists'}
+                        {style === 'email' && 'Professional email executive summary'}
+                        {style === 'slack' && 'Brief conversational message summary'}
+                        {style === 'custom' && 'Format using your own custom rules'}
+                        {style === 'raw' && 'Original transcription text unmodified'}
                       </span>
                     </button>
                   ))}
@@ -2003,7 +2014,7 @@ function App() {
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="mobile-nav-bar" id="tour-mobile-nav">
-        <button
+        <button 
           className={`mobile-nav-btn ${activeTab === 'dictation' ? 'active' : ''}`}
           onClick={() => setActiveTab('dictation')}
         >
@@ -2011,7 +2022,7 @@ function App() {
           <span>Dictate</span>
           <span className="active-dot"></span>
         </button>
-        <button
+        <button 
           className={`mobile-nav-btn ${activeTab === 'memories' ? 'active' : ''}`}
           onClick={() => setActiveTab('memories')}
         >
@@ -2224,7 +2235,7 @@ function App() {
             width: '100%',
             height: '100%',
             zIndex: 999,
-            pointerEvents: 'auto'
+            pointerEvents: 'none'
           }}
         >
           {spotlightRect && (
@@ -2271,9 +2282,9 @@ function App() {
                     width: '320px'
                   };
                 }
-                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 200;
-                const topVal = placeAbove
-                  ? `${spotlightRect.top - 16}px`
+                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 260;
+                const topVal = placeAbove 
+                  ? `${spotlightRect.top - 16}px` 
                   : `${spotlightRect.bottom + 16}px`;
                 const leftVal = `${Math.max(16, Math.min(window.innerWidth - 336, spotlightRect.left + spotlightRect.width / 2 - 160))}px`;
                 return {
@@ -2294,7 +2305,8 @@ function App() {
               gap: '1rem',
               color: 'var(--text-main)',
               fontFamily: 'var(--font-sans)',
-              zIndex: 1001
+              zIndex: 1001,
+              pointerEvents: 'auto'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

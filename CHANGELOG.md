@@ -2,14 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1.0] - 2026-05-25
+
+### Added
+- **Theme-Adaptive Dynamic Logo**: Experience a cohesive UI with a new dynamic SVG logo that automatically inherits and adapts to your selected color theme and dark/light mode settings.
+
+### Changed
+- **Model Download Gate Redesign**: Monitor model downloads and manage load errors through a redesigned, Obsidian-style gate featuring inline SVG status icons and hover shadow cues.
+- **Visual & Style Refinement**: Enjoy a cleaner, more balanced UI layout with polished container margins, consistent button icon sizing, and alignment refinements across all views.
+- **Mobile Touch Targets and Navigation Layout**: Tap controls more easily on mobile with 44px minimum touch targets for Whisper model selection buttons and settings, and navigate without layout overlap thanks to fixed navigation bar positioning.
+
+### Fixed
+- **Spotlight Tour Click Interception**: Resolved a usability issue where the tour overlay blocked mouse clicks to highlighted target elements underneath, and fixed potential off-screen tooltip rendering.
+- **Tour Tab Change Graceful Exit**: Automatically cancel the onboarding tour if the user manually switches tabs away from the target panel to prevent visual unmount glitches.
+- **Writing Style Selection Layout**: Scan and select writing styles more easily with list items structured in a clean vertical column layout with descriptive subtexts for each formatting preset.
+
+
 ## [0.0.0.4] - 2026-05-22
 
 ### Changed
-- **ESLint rule updates for test files**: Scoped `@typescript-eslint/no-explicit-any` off for `**/*.test.{ts,tsx}` files to allow legitimate test mocks and Worker stubs without type contortions.
-- **LoRA Gate findings correction**: Updated `docs/superpowers/phase-d-conversion-findings.md` to classify Gemma 4 web LoRA hot-swapping as unsupported in current MediaPipe web tasks runtime. Recommended falling back to RAG-only v1 processing.
+- **Developer Experience — ESLint Rule Update**: Scoped off `no-explicit-any` in test files (`**/*.test.{ts,tsx}`) to simplify mock and stub definitions during unit testing.
+- **LoRA Gate Findings**: Updated [phase-d-conversion-findings.md](file:///home/abhidaas/Core/Workspace/AntigravityCLI/voice-memory-antigravity/docs/superpowers/phase-d-conversion-findings.md) documenting that MediaPipe Web GenAI does not support Gemma 4 LoRA adapters. Switched the v1 scope to a verified RAG-only design.
 
 ### Fixed
-- **ESLint errors**: Fixed remaining 24 eslint warnings across `App.tsx`, `inference.ts`, and `llm-worker.ts` by removing unused catch bindings and typing/annotating worker callbacks.
+- **ESLint Warnings**: Resolved 24 warnings in `App.tsx`, `inference.ts`, and `llm-worker.ts` to ensure clean build gating and prevent potential runtime callback issues.
 
 ## [0.0.0.3] - 2026-05-22
 
