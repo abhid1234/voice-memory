@@ -5,21 +5,21 @@ All notable changes to this project will be documented in this file.
 ## [0.0.1.0] - 2026-05-25
 
 ### Added
-- **Theme-Adaptive Dynamic Logo**: Swapped the static image logo for an inline, dynamic HSL-themed vector SVG logo component that adapts to the application's dark mode and accent theme.
+- **Theme-Adaptive Dynamic Logo**: Experience a cohesive UI with a new dynamic SVG logo that automatically inherits and adapts to your selected color theme and dark/light mode settings.
 
 ### Changed
-- **Model Download Gate Redesign**: Redesigned the WebGPU/Gemma on-device model download gateway and load-error screens to use premium Obsidian-style buttons with descriptive inline SVG icons.
-- **Visual & Style Refinement**: Adjusted application container margins, button icons, and element alignments in `App.css` for a more balanced layout.
-- **Mobile Touch Targets and Navigation Layout**: Standardized touch targets to at least 44px for segment buttons and settings controls, and added high-priority positioning overrides to the mobile bottom navigation bar to prevent UI overlap.
+- **Model Download Gate Redesign**: Monitor model downloads and manage load errors through a redesigned, Obsidian-style gate featuring inline SVG status icons and hover shadow cues.
+- **Visual & Style Refinement**: Enjoy a cleaner, more balanced UI layout with polished container margins, consistent button icon sizing, and alignment refinements across all views.
+- **Mobile Touch Targets and Navigation Layout**: Tap controls more easily on mobile with 44px minimum touch targets for Whisper model selection buttons and settings, and navigate without layout overlap thanks to fixed navigation bar positioning.
 
 ## [0.0.0.4] - 2026-05-22
 
 ### Changed
-- **ESLint rule updates for test files**: Scoped `@typescript-eslint/no-explicit-any` off for `**/*.test.{ts,tsx}` files to allow legitimate test mocks and Worker stubs without type contortions.
-- **LoRA Gate findings correction**: Updated `docs/superpowers/phase-d-conversion-findings.md` to classify Gemma 4 web LoRA hot-swapping as unsupported in current MediaPipe web tasks runtime. Recommended falling back to RAG-only v1 processing.
+- **Developer Experience — ESLint Rule Update**: Scoped off `no-explicit-any` in test files (`**/*.test.{ts,tsx}`) to simplify mock and stub definitions during unit testing.
+- **LoRA Gate Findings**: Updated [phase-d-conversion-findings.md](file:///home/abhidaas/Core/Workspace/AntigravityCLI/voice-memory-antigravity/docs/superpowers/phase-d-conversion-findings.md) documenting that MediaPipe Web GenAI does not support Gemma 4 LoRA adapters. Switched the v1 scope to a verified RAG-only design.
 
 ### Fixed
-- **ESLint errors**: Fixed remaining 24 eslint warnings across `App.tsx`, `inference.ts`, and `llm-worker.ts` by removing unused catch bindings and typing/annotating worker callbacks.
+- **ESLint Warnings**: Resolved 24 warnings in `App.tsx`, `inference.ts`, and `llm-worker.ts` to ensure clean build gating and prevent potential runtime callback issues.
 
 ## [0.0.0.3] - 2026-05-22
 
