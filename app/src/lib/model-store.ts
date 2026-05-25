@@ -103,3 +103,11 @@ export async function getModelBytes(variant: GemmaVariant): Promise<Uint8Array> 
   return new Uint8Array(await fileObj.arrayBuffer())
 }
 
+/** Read the cached model as a File object. */
+export async function getModelFile(variant: GemmaVariant): Promise<File> {
+  const dir = await modelDir()
+  const handle = await dir.getFileHandle(GEMMA_VARIANTS[variant].file)
+  return handle.getFile()
+}
+
+
