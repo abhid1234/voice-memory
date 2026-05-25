@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 - **Visual & Style Refinement**: Enjoy a cleaner, more balanced UI layout with polished container margins, consistent button icon sizing, and alignment refinements across all views.
 - **Mobile Touch Targets and Navigation Layout**: Tap controls more easily on mobile with 44px minimum touch targets for Whisper model selection buttons and settings, and navigate without layout overlap thanks to fixed navigation bar positioning.
 
+### Fixed
+- **Spotlight Tour Click Interception**: Resolved a usability issue where the tour overlay blocked mouse clicks to highlighted target elements underneath, and fixed potential off-screen tooltip rendering.
+- **Tour Tab Change Graceful Exit**: Automatically cancel the onboarding tour if the user manually switches tabs away from the target panel to prevent visual unmount glitches.
+- **Writing Style Selection Layout**: Properly structured the writing style list items in a vertical column layout with descriptive subtexts for each formatting preset.
+
 ## [0.0.0.4] - 2026-05-22
 
 ### Changed
