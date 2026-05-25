@@ -1206,6 +1206,36 @@ function App() {
             
             {/* Center Column: Interactive Controls + active Editorial Sheet */}
             <div className="dictation-center-column">
+              {/* AI Engine Model Card */}
+              <div className="top-settings-grid mobile-hidden" style={{ marginBottom: '1.2rem' }}>
+                <div className="section-card bottom-grid-card">
+                  <h4 className="section-title">
+                    <span>AI Engine Model</span>
+                    <span className="whisper-v3-badge">Whisper v3</span>
+                  </h4>
+                  <div className="model-segmented-control">
+                    {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
+                      <button
+                        key={model}
+                        className={`model-segment-btn ${selectedModel === model ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedModel(model);
+                          stt.preloadModel(model, setStatusText, (file, prog) => {
+                            setDownloadProgress(prog);
+                            setDownloadingFile(file);
+                          });
+                          setStatusText(`Switched AI Model to ${model}`);
+                        }}
+                      >
+                        {model === 'Xenova/whisper-tiny.en' && 'Speed'}
+                        {model === 'Xenova/whisper-base.en' && 'Balanced'}
+                        {model === 'Xenova/whisper-small.en' && 'Accuracy'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div 
                 className={`section-card voice-controls-card ${isDragging ? 'dragging-over' : ''}`}
                 onDragOver={handleDragOver}
@@ -1456,36 +1486,7 @@ function App() {
                 </div>
               </div>
 
-              {/* Bottom Cards Grid - Desktop only */}
-              <div className="bottom-settings-grid mobile-hidden">
-                {/* AI Engine Model Card */}
-                <div className="section-card bottom-grid-card">
-                  <h4 className="section-title">
-                    <span>AI Engine Model</span>
-                    <span className="whisper-v3-badge">Whisper v3</span>
-                  </h4>
-                  <div className="model-segmented-control">
-                    {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
-                      <button
-                        key={model}
-                        className={`model-segment-btn ${selectedModel === model ? 'active' : ''}`}
-                        onClick={() => {
-                          setSelectedModel(model);
-                          stt.preloadModel(model, setStatusText, (file, prog) => {
-                            setDownloadProgress(prog);
-                            setDownloadingFile(file);
-                          });
-                          setStatusText(`Switched AI Model to ${model}`);
-                        }}
-                      >
-                        {model === 'Xenova/whisper-tiny.en' && 'Speed'}
-                        {model === 'Xenova/whisper-base.en' && 'Balanced'}
-                        {model === 'Xenova/whisper-small.en' && 'Accuracy'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+
 
             </div>
 
@@ -2648,15 +2649,20 @@ function GalaxyMap({
   const mousePosRef = useRef<{ x: number; y: number }>({ x: -1000, y: -1000 });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Generate fixed background star coordinates for visual depth
+  // Generate fixed background star coordinates for visual depth using a pure seed-based generator
   const backgroundStars = useMemo(() => {
     const starsList = [];
+    let seed = 123.45;
+    const nextRandom = () => {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    };
     for (let i = 0; i < 45; i++) {
       starsList.push({
-        x: Math.random(),
-        y: Math.random(),
-        size: Math.random() * 1.5 + 0.3,
-        opacity: Math.random() * 0.4 + 0.1,
+        x: nextRandom(),
+        y: nextRandom(),
+        size: nextRandom() * 1.5 + 0.3,
+        opacity: nextRandom() * 0.4 + 0.1,
       });
     }
     return starsList;
@@ -2888,7 +2894,7 @@ function GalaxyMap({
     draw();
 
     return () => cancelAnimationFrame(animationFrameRef.current);
-  }, [stars, citations]);
+  }, [stars, citations, backgroundStars]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
