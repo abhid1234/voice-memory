@@ -14,7 +14,7 @@ let initPromise: Promise<void> | null = null;
 async function doInit(variant: GemmaVariant) {
   const bytes = await getModelBytes(variant);
   const fileset = await FilesetResolver.forGenAiTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@latest/wasm",
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm",
   );
   llm = await LlmInference.createFromOptions(fileset, {
     baseOptions: { modelAssetBuffer: bytes },
