@@ -68,6 +68,28 @@ const ShieldIcon = () => (
   </svg>
 );
 
+// Lightweight, theme-adaptive brand mark (sage in light, mint in dark via --accent-color).
+// The filled emerald tile lives only in the favicon / PWA icons, where a solid icon belongs.
+const LogoMark = ({ size = 24, className }: { size?: number; className?: string }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    role="img"
+    aria-label="VoiceMemory"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
+  >
+    <g fill="var(--accent-color)">
+      <rect x="4" y="19" width="4" height="10" rx="2" />
+      <rect x="13" y="14" width="4" height="20" rx="2" />
+      <rect x="22" y="9" width="4" height="30" rx="2" />
+      <rect x="31" y="14" width="4" height="20" rx="2" />
+      <rect x="40" y="19" width="4" height="10" rx="2" />
+    </g>
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
     <circle cx="12" cy="12" r="3" />
@@ -1052,7 +1074,7 @@ function App() {
             <MenuIcon />
           </button>
           <div className="header-logo-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/sleek-logo.png" className="mini-logo" alt="logo" style={{ height: '24px' }} />
+            <LogoMark className="mini-logo" size={24} />
             <span className="site-title" style={{ fontWeight: 700, fontSize: 'var(--fs-lg)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
         </div>
@@ -1081,7 +1103,7 @@ function App() {
       <aside className={`app-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/sleek-logo.png" className="sidebar-logo" alt="logo" style={{ height: '28px' }} />
+            <LogoMark className="sidebar-logo" size={28} />
             <span className="sidebar-title" style={{ fontWeight: 700, fontSize: 'var(--fs-xl)', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>VoiceMemory</span>
           </div>
           <button className="sidebar-close-btn" onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar">✕</button>
