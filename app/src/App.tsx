@@ -1235,7 +1235,7 @@ function App() {
                     <span className="workspace-intro-feature-icon">🌌</span>
                     <div className="workspace-intro-feature-text">
                       <strong>Constellation Mapping</strong>
-                      <span>Explore semantic relationships between your memories visually on an interactive radar map.</span>
+                      <span>Explore semantic connections between your memories visually on an interactive radar map. Every saved thought is represented as a star. The closer two stars are on the map, the more semantically or conceptually similar they are, helping you discover patterns in your thoughts.</span>
                     </div>
                   </div>
                 </div>
@@ -1257,7 +1257,6 @@ function App() {
                   </ul>
                 </div>
               </div>
-
               {/* AI Engine Model Card */}
               <div className="top-settings-grid mobile-hidden" style={{ marginBottom: '1.2rem' }}>
                 <div className="section-card bottom-grid-card">
