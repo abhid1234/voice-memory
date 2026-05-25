@@ -1206,6 +1206,58 @@ function App() {
             
             {/* Center Column: Interactive Controls + active Editorial Sheet */}
             <div className="dictation-center-column">
+              {/* Onboarding Introduction Banner */}
+              <div className="workspace-intro-card">
+                <div className="workspace-intro-header">
+                  <h3 className="workspace-intro-title">Voice Memory Journal</h3>
+                  <span className="workspace-intro-badge">On-Device AI</span>
+                </div>
+                <p className="workspace-intro-description">
+                  An offline-first, private voice dictation and semantic memory explorer. 
+                  Your audio and transcribed thoughts are processed entirely on-device and never leave your machine.
+                </p>
+                <div className="workspace-intro-features">
+                  <div className="workspace-intro-feature-item">
+                    <span className="workspace-intro-feature-icon">🎙️</span>
+                    <div className="workspace-intro-feature-text">
+                      <strong>On-Device Whisper STT</strong>
+                      <span>High-accuracy transcription using OpenAI's Whisper running locally in a Web Worker.</span>
+                    </div>
+                  </div>
+                  <div className="workspace-intro-feature-item">
+                    <span className="workspace-intro-feature-icon">🧠</span>
+                    <div className="workspace-intro-feature-text">
+                      <strong>Local Gemma RAG</strong>
+                      <span>Query your saved thoughts and get intelligent synthesis using on-device Gemma 2B.</span>
+                    </div>
+                  </div>
+                  <div className="workspace-intro-feature-item">
+                    <span className="workspace-intro-feature-icon">🌌</span>
+                    <div className="workspace-intro-feature-text">
+                      <strong>Constellation Mapping</strong>
+                      <span>Explore semantic relationships between your memories visually on an interactive radar map.</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="workspace-intro-steps">
+                  <h4 className="workspace-intro-steps-title">Quick Start Guide</h4>
+                  <ul className="workspace-intro-steps-list">
+                    <li className="workspace-intro-step-item">
+                      <span className="workspace-intro-step-number">1</span>
+                      <span>Select AI model below</span>
+                    </li>
+                    <li className="workspace-intro-step-item">
+                      <span className="workspace-intro-step-number">2</span>
+                      <span>Click Start Dictation & speak</span>
+                    </li>
+                    <li className="workspace-intro-step-item">
+                      <span className="workspace-intro-step-number">3</span>
+                      <span>Save and explore memories</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
               {/* AI Engine Model Card */}
               <div className="top-settings-grid mobile-hidden" style={{ marginBottom: '1.2rem' }}>
                 <div className="section-card bottom-grid-card">
