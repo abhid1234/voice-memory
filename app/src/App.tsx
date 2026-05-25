@@ -459,16 +459,23 @@ function App() {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
+    let ticking = false;
     const updateRect = () => {
-      let currentTargetId = step.targetId;
-      if (currentTargetId === 'tour-header-nav' && window.innerWidth <= 768) {
-        currentTargetId = 'tour-mobile-nav';
-      }
-      const el = document.getElementById(currentTargetId);
-      if (el) {
-        setSpotlightRect(el.getBoundingClientRect());
-      } else {
-        setSpotlightRect(null);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          let currentTargetId = step.targetId;
+          if (currentTargetId === 'tour-header-nav' && window.innerWidth <= 768) {
+            currentTargetId = 'tour-mobile-nav';
+          }
+          const el = document.getElementById(currentTargetId);
+          if (el) {
+            setSpotlightRect(el.getBoundingClientRect());
+          } else {
+            setSpotlightRect(null);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -1453,10 +1460,10 @@ function App() {
               <div className="bottom-settings-grid mobile-hidden">
                 {/* AI Engine Model Card */}
                 <div className="section-card bottom-grid-card">
-                  <div className="bottom-grid-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                    <h4 className="section-title" style={{ margin: 0 }}>AI Engine Model</h4>
+                  <h4 className="section-title">
+                    <span>AI Engine Model</span>
                     <span className="whisper-v3-badge">Whisper v3</span>
-                  </div>
+                  </h4>
                   <div className="model-segmented-control">
                     {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
                       <button
