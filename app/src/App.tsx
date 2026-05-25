@@ -497,6 +497,13 @@ function App() {
     }
   }, [tourStep]);
 
+  // Cancel tour if user navigates away from the required tab
+  useEffect(() => {
+    if (tourStep !== null && tourStep >= 1 && tourStep <= 3 && activeTab !== 'dictation') {
+      setTourStep(null);
+    }
+  }, [activeTab, tourStep]);
+
   // Mic Visualizer reference
   const recordWrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -1522,19 +1529,29 @@ function App() {
                       className={`style-list-btn ${dictationStyle === style ? 'active' : ''}`}
                       onClick={() => setDictationStyle(style)}
                     >
-                      {style === 'cleaned' && <SparklesIcon />}
-                      {style === 'bullets' && <ListIcon />}
-                      {style === 'email' && <MailIcon />}
-                      {style === 'slack' && <MessageSquareIcon />}
-                      {style === 'custom' && <EditIcon />}
-                      {style === 'raw' && <FileTextIcon />}
-                      <span>
-                        {style === 'cleaned' && 'Cleaned Transcript'}
-                        {style === 'bullets' && 'Action Bullets'}
-                        {style === 'email' && 'Executive Summary'}
-                        {style === 'slack' && 'Slack Message'}
-                        {style === 'custom' && 'Custom Instruction'}
-                        {style === 'raw' && 'Raw Text'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%' }}>
+                        {style === 'cleaned' && <SparklesIcon />}
+                        {style === 'bullets' && <ListIcon />}
+                        {style === 'email' && <MailIcon />}
+                        {style === 'slack' && <MessageSquareIcon />}
+                        {style === 'custom' && <EditIcon />}
+                        {style === 'raw' && <FileTextIcon />}
+                        <span className="style-btn-title">
+                          {style === 'cleaned' && 'Cleaned Transcript'}
+                          {style === 'bullets' && 'Action Bullets'}
+                          {style === 'email' && 'Executive Summary'}
+                          {style === 'slack' && 'Slack Message'}
+                          {style === 'custom' && 'Custom Instruction'}
+                          {style === 'raw' && 'Raw Text'}
+                        </span>
+                      </div>
+                      <span className="style-btn-desc">
+                        {style === 'cleaned' && 'Remove filler words and stutters smoothly'}
+                        {style === 'bullets' && 'Key takeaways and items in bullet lists'}
+                        {style === 'email' && 'Professional email executive summary'}
+                        {style === 'slack' && 'Brief conversational message summary'}
+                        {style === 'custom' && 'Format using your own custom rules'}
+                        {style === 'raw' && 'Original transcription text unmodified'}
                       </span>
                     </button>
                   ))}
@@ -2219,7 +2236,7 @@ function App() {
             width: '100%',
             height: '100%',
             zIndex: 999,
-            pointerEvents: 'auto'
+            pointerEvents: 'none'
           }}
         >
           {spotlightRect && (
@@ -2266,7 +2283,7 @@ function App() {
                     width: '320px'
                   };
                 }
-                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 200;
+                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 260;
                 const topVal = placeAbove 
                   ? `${spotlightRect.top - 16}px` 
                   : `${spotlightRect.bottom + 16}px`;
@@ -2289,7 +2306,8 @@ function App() {
               gap: '1rem',
               color: 'var(--text-main)',
               fontFamily: 'var(--font-sans)',
-              zIndex: 1001
+              zIndex: 1001,
+              pointerEvents: 'auto'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
