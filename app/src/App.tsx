@@ -415,12 +415,30 @@ function App() {
       return;
     }
 
+    let targetId = step.targetId;
+    if (targetId === 'tour-header-nav' && window.innerWidth <= 768) {
+      targetId = 'tour-mobile-nav';
+    }
+
+    // Scroll the target into view once when the step starts.
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    let ticking = false;
     const updateRect = () => {
-      const element = document.getElementById(step.targetId);
-      if (element) {
-        setSpotlightRect(element.getBoundingClientRect());
-      } else {
-        setSpotlightRect(null);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          let currentTargetId = step.targetId;
+          if (currentTargetId === 'tour-header-nav' && window.innerWidth <= 768) {
+            currentTargetId = 'tour-mobile-nav';
+          }
+          const el = document.getElementById(currentTargetId);
+          setSpotlightRect(el ? el.getBoundingClientRect() : null);
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -1155,7 +1173,7 @@ function App() {
                 onDrop={handleDrop}
                 style={{ position: 'relative' }}
               >
-                <h3 className="section-title">Voice Controls</h3>
+                <h4 className="section-title">Voice Controls</h4>
                 
                 {isDragging && (
                   <div className="drag-drop-overlay">
@@ -1249,7 +1267,7 @@ function App() {
                 <div className="sheet-header">
                   <div className="sheet-title-group">
                     <span className="doc-badge">DRAFT</span>
-                    <h4 className="sheet-title">AI Voice Draft</h4>
+                    <h3 className="sheet-title">AI Voice Draft</h3>
                   </div>
                   
                   <div className="sheet-actions">
@@ -1402,10 +1420,10 @@ function App() {
               <div className="bottom-settings-grid mobile-hidden">
                 {/* AI Engine Model Card */}
                 <div className="section-card bottom-grid-card">
-                  <div className="bottom-grid-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                    <h3 className="section-title" style={{ margin: 0 }}>AI Engine Model</h3>
+                  <h4 className="section-title">
+                    <span>AI Engine Model</span>
                     <span className="whisper-v3-badge">Whisper v3</span>
-                  </div>
+                  </h4>
                   <div className="model-segmented-control">
                     {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
                       <button
@@ -1479,7 +1497,7 @@ function App() {
 
               {/* Writing Format Style Card */}
               <div className="section-card">
-                <h3 className="section-title">Writing Format Style</h3>
+                <h4 className="section-title">Writing Format Style</h4>
                 <div className="style-vertical-list" id="tour-style-select">
                   {(['cleaned', 'bullets', 'email', 'slack', 'custom', 'raw'] as const).map((style) => (
                     <button
@@ -1521,7 +1539,7 @@ function App() {
 
               {/* Personal Vocabulary Card */}
               <div className="section-card">
-                <h3 className="section-title">Personal Vocabulary</h3>
+                <h4 className="section-title">Personal Vocabulary</h4>
                 <div className="dictionary-editor-group">
                   <label className="input-label">Keywords parsed phonetically:</label>
                   
@@ -1569,7 +1587,7 @@ function App() {
 
               {/* AI Engine Settings */}
               <div className="section-card desktop-hidden">
-                <h3 className="section-title">AI Engine Settings</h3>
+                <h4 className="section-title">AI Engine Settings</h4>
                 <div className="dictionary-editor-group">
                   <label className="input-label">Whisper Model Weight:</label>
                   <select 
@@ -1908,7 +1926,7 @@ function App() {
               </div>
               
               <div className="section-card vault-metrics-card">
-                <h3 className="section-title" style={{ marginBottom: '1.25rem' }}>Storage Diagnostics</h3>
+                <h4 className="section-title" style={{ marginBottom: '1.25rem' }}>Storage Diagnostics</h4>
                 
                 <div className="vault-metric-row">
                   <span>IndexedDB Usage</span>
@@ -1962,10 +1980,18 @@ function App() {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="mobile-nav-bar">
-        <button 
+      <nav className="mobile-nav-bar" id="tour-mobile-nav">
+        <button
           className={`mobile-nav-btn ${activeTab === 'dictation' ? 'active' : ''}`}
           onClick={() => setActiveTab('dictation')}
+        >
+          <MicIcon />
+          <span>Dictate</span>
+          <span className="active-dot"></span>
+        </button>
+        <button
+          className={`mobile-nav-btn ${activeTab === 'memories' ? 'active' : ''}`}
+          onClick={() => setActiveTab('memories')}
         >
           <MemoriesIcon />
           <span>Memories</span>
@@ -2223,14 +2249,15 @@ function App() {
                     width: '320px'
                   };
                 }
-                const placeAbove = spotlightRect.bottom > window.innerHeight - 240;
-                const topVal = placeAbove 
-                  ? `${spotlightRect.top - 200}px` 
+                const placeAbove = spotlightRect.bottom > window.innerHeight - 240 && spotlightRect.top > 200;
+                const topVal = placeAbove
+                  ? `${spotlightRect.top - 16}px`
                   : `${spotlightRect.bottom + 16}px`;
                 const leftVal = `${Math.max(16, Math.min(window.innerWidth - 336, spotlightRect.left + spotlightRect.width / 2 - 160))}px`;
                 return {
                   top: topVal,
                   left: leftVal,
+                  transform: placeAbove ? 'translateY(-100%)' : 'none',
                   width: '320px',
                   transition: 'all 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
                 };
