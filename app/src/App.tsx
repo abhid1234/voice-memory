@@ -100,8 +100,6 @@ const LogoIcon = ({ className = 'app-logo', size = 24 }: { className?: string, s
     />
   </svg>
 );
-
-
 const SettingsIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '22px', height: '22px' }}>
     <circle cx="12" cy="12" r="3" />
