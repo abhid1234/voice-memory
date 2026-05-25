@@ -1,5 +1,5 @@
 import { LlmInference, FilesetResolver } from "@mediapipe/tasks-genai";
-import { getModelStream, type GemmaVariant } from "./model-store";
+import { getModelFile, type GemmaVariant } from "./model-store";
 import { buildGemmaPrompt } from "./gemma-prompt";
 
 type InMsg =
@@ -12,16 +12,21 @@ let llm: any = null;
 let initPromise: Promise<void> | null = null;
 
 async function doInit(variant: GemmaVariant) {
-  const stream = await getModelStream(variant);
+  const fileObj = await getModelFile(variant);
+  const url = URL.createObjectURL(fileObj);
   const fileset = await FilesetResolver.forGenAiTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm",
   );
-  llm = await LlmInference.createFromOptions(fileset, {
-    baseOptions: { modelAssetBuffer: stream as any },
-    maxTokens: 512,
-    topK: 40,
-    temperature: 0.7,
-  });
+  try {
+    llm = await LlmInference.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: url },
+      maxTokens: 512,
+      topK: 40,
+      temperature: 0.7,
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 /** Idempotent: starts init once and returns the same promise for concurrent callers. */
