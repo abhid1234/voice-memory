@@ -1,5 +1,5 @@
 import { LlmInference, FilesetResolver } from "@mediapipe/tasks-genai";
-import { getModelBytes, type GemmaVariant } from "./model-store";
+import { getModelStream, type GemmaVariant } from "./model-store";
 import { buildGemmaPrompt } from "./gemma-prompt";
 
 type InMsg =
@@ -12,12 +12,12 @@ let llm: any = null;
 let initPromise: Promise<void> | null = null;
 
 async function doInit(variant: GemmaVariant) {
-  const bytes = await getModelBytes(variant);
+  const stream = await getModelStream(variant);
   const fileset = await FilesetResolver.forGenAiTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai@0.10.27/wasm",
   );
   llm = await LlmInference.createFromOptions(fileset, {
-    baseOptions: { modelAssetBuffer: bytes },
+    baseOptions: { modelAssetBuffer: stream as any },
     maxTokens: 512,
     topK: 40,
     temperature: 0.7,

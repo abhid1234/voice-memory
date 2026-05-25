@@ -103,3 +103,12 @@ export async function getModelBytes(variant: GemmaVariant): Promise<Uint8Array> 
   return new Uint8Array(await fileObj.arrayBuffer())
 }
 
+/** Read the cached model as a stream reader for memory-efficient loading. */
+export async function getModelStream(variant: GemmaVariant): Promise<ReadableStreamDefaultReader<Uint8Array>> {
+  const dir = await modelDir()
+  const handle = await dir.getFileHandle(GEMMA_VARIANTS[variant].file)
+  const fileObj = await handle.getFile()
+  return fileObj.stream().getReader() as ReadableStreamDefaultReader<Uint8Array>
+}
+
+
