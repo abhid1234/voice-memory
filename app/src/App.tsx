@@ -1206,6 +1206,36 @@ function App() {
             
             {/* Center Column: Interactive Controls + active Editorial Sheet */}
             <div className="dictation-center-column">
+              {/* AI Engine Model Card */}
+              <div className="top-settings-grid mobile-hidden" style={{ marginBottom: '1.2rem' }}>
+                <div className="section-card bottom-grid-card">
+                  <h4 className="section-title">
+                    <span>AI Engine Model</span>
+                    <span className="whisper-v3-badge">Whisper v3</span>
+                  </h4>
+                  <div className="model-segmented-control">
+                    {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
+                      <button
+                        key={model}
+                        className={`model-segment-btn ${selectedModel === model ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedModel(model);
+                          stt.preloadModel(model, setStatusText, (file, prog) => {
+                            setDownloadProgress(prog);
+                            setDownloadingFile(file);
+                          });
+                          setStatusText(`Switched AI Model to ${model}`);
+                        }}
+                      >
+                        {model === 'Xenova/whisper-tiny.en' && 'Speed'}
+                        {model === 'Xenova/whisper-base.en' && 'Balanced'}
+                        {model === 'Xenova/whisper-small.en' && 'Accuracy'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div 
                 className={`section-card voice-controls-card ${isDragging ? 'dragging-over' : ''}`}
                 onDragOver={handleDragOver}
@@ -1456,36 +1486,7 @@ function App() {
                 </div>
               </div>
 
-              {/* Bottom Cards Grid - Desktop only */}
-              <div className="bottom-settings-grid mobile-hidden">
-                {/* AI Engine Model Card */}
-                <div className="section-card bottom-grid-card">
-                  <h4 className="section-title">
-                    <span>AI Engine Model</span>
-                    <span className="whisper-v3-badge">Whisper v3</span>
-                  </h4>
-                  <div className="model-segmented-control">
-                    {(['Xenova/whisper-tiny.en', 'Xenova/whisper-base.en', 'Xenova/whisper-small.en'] as const).map((model) => (
-                      <button
-                        key={model}
-                        className={`model-segment-btn ${selectedModel === model ? 'active' : ''}`}
-                        onClick={() => {
-                          setSelectedModel(model);
-                          stt.preloadModel(model, setStatusText, (file, prog) => {
-                            setDownloadProgress(prog);
-                            setDownloadingFile(file);
-                          });
-                          setStatusText(`Switched AI Model to ${model}`);
-                        }}
-                      >
-                        {model === 'Xenova/whisper-tiny.en' && 'Speed'}
-                        {model === 'Xenova/whisper-base.en' && 'Balanced'}
-                        {model === 'Xenova/whisper-small.en' && 'Accuracy'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+
 
             </div>
 
@@ -2648,6 +2649,25 @@ function GalaxyMap({
   const mousePosRef = useRef<{ x: number; y: number }>({ x: -1000, y: -1000 });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Generate fixed background star coordinates for visual depth using a pure seed-based generator
+  const backgroundStars = useMemo(() => {
+    const starsList = [];
+    let seed = 123.45;
+    const nextRandom = () => {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    };
+    for (let i = 0; i < 45; i++) {
+      starsList.push({
+        x: nextRandom(),
+        y: nextRandom(),
+        size: nextRandom() * 1.5 + 0.3,
+        opacity: nextRandom() * 0.4 + 0.1,
+      });
+    }
+    return starsList;
+  }, []);
+
   interface GalaxyStar {
     memo: VoiceMemo;
     angle: number;
@@ -2707,13 +2727,66 @@ function GalaxyMap({
       localAngle += 0.001;
       
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      ctx.strokeStyle = isDark ? 'rgba(247, 245, 240, 0.02)' : 'rgba(43, 41, 38, 0.02)';
-      ctx.lineWidth = 1;
+      
+      // Resolve theme colors dynamically for canvas operations
+      const rootStyles = window.getComputedStyle(document.documentElement);
+      const accentColor = rootStyles.getPropertyValue('--accent-color').trim() || '#4edea3';
+      const accentLight = rootStyles.getPropertyValue('--accent-light').trim() || 'rgba(78, 222, 163, 0.1)';
+      const accentBright = rootStyles.getPropertyValue('--accent-bright').trim() || '#6ffbbe';
+
+      // 1. Draw space/nebula radial background gradient
+      const bgGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height) / 2);
+      if (isDark) {
+        bgGrad.addColorStop(0, accentLight);
+        bgGrad.addColorStop(0.5, 'rgba(15, 17, 23, 0.98)');
+        bgGrad.addColorStop(1, 'rgba(10, 11, 14, 1)');
+      } else {
+        bgGrad.addColorStop(0, accentLight);
+        bgGrad.addColorStop(0.6, 'rgba(250, 249, 246, 0.98)');
+        bgGrad.addColorStop(1, 'rgba(244, 242, 238, 1)');
+      }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Draw background starfield
+      backgroundStars.forEach((star) => {
+        ctx.beginPath();
+        const opacity = star.opacity * (isDark ? 0.75 : 0.45);
+        ctx.fillStyle = isDark 
+          ? `rgba(255, 255, 255, ${opacity})` 
+          : `rgba(0, 0, 0, ${opacity})`;
+        ctx.arc(star.x * width, star.y * height, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 3. Draw Concentric Radar/Orbit Rings
+      ctx.strokeStyle = isDark ? 'rgba(232, 230, 225, 0.05)' : 'rgba(35, 34, 31, 0.05)';
+      ctx.lineWidth = 0.8;
+      ctx.setLineDash([4, 6]);
       for (let r = 1; r <= 3; r++) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, maxOrbit * (r / 3), 0, Math.PI * 2);
         ctx.stroke();
       }
+      ctx.setLineDash([]); // Reset line dash
+
+      // 4. Draw coordinate axes
+      ctx.strokeStyle = isDark ? 'rgba(232, 230, 225, 0.02)' : 'rgba(35, 34, 31, 0.02)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(centerX - maxOrbit, centerY);
+      ctx.lineTo(centerX + maxOrbit, centerY);
+      ctx.moveTo(centerX, centerY - maxOrbit);
+      ctx.lineTo(centerX, centerY + maxOrbit);
+      ctx.stroke();
+
+      // 5. Draw Orbit Labels
+      ctx.font = '9px var(--font-mono)';
+      ctx.fillStyle = isDark ? 'rgba(232, 230, 225, 0.25)' : 'rgba(35, 34, 31, 0.25)';
+      ctx.textAlign = 'left';
+      ctx.fillText('INNER ORBIT', centerX + 10, centerY - maxOrbit * 0.33 + 3);
+      ctx.fillText('MID ORBIT', centerX + 10, centerY - maxOrbit * 0.66 + 3);
+      ctx.fillText('OUTER ORBIT', centerX + 10, centerY - maxOrbit + 3);
 
       const starsWithCoords = stars.map((star) => {
         const angle = star.angle + localAngle * star.speedFactor;
@@ -2727,7 +2800,7 @@ function GalaxyMap({
         };
       });
 
-      ctx.lineWidth = 0.6;
+      // 6. Draw tag-sharing connection lines
       for (let i = 0; i < starsWithCoords.length; i++) {
         for (let j = i + 1; j < starsWithCoords.length; j++) {
           const starA = starsWithCoords[i];
@@ -2738,17 +2811,18 @@ function GalaxyMap({
           const hasSharedTag = tagsA.some((t: string) => tagsB.includes(t));
           
           if (hasSharedTag) {
+            ctx.save();
+            ctx.lineWidth = 0.8;
             const grad = ctx.createLinearGradient(starA.x, starA.y, starB.x, starB.y);
-            const colorA = isDark ? 'rgba(92, 148, 114, 0.08)' : 'rgba(78, 126, 96, 0.08)';
-            const colorB = isDark ? 'rgba(138, 207, 162, 0.08)' : 'rgba(53, 86, 65, 0.08)';
-            grad.addColorStop(0, colorA);
-            grad.addColorStop(1, colorB);
-            
+            grad.addColorStop(0, accentColor);
+            grad.addColorStop(1, accentBright);
             ctx.strokeStyle = grad;
+            ctx.globalAlpha = 0.18;
             ctx.beginPath();
             ctx.moveTo(starA.x, starA.y);
             ctx.lineTo(starB.x, starB.y);
             ctx.stroke();
+            ctx.restore();
           }
         }
       }
@@ -2765,34 +2839,51 @@ function GalaxyMap({
           newHover = { memo: star.memo, x: star.x, y: star.y };
         }
 
+        // 7. Draw radial glowing aura under active/hovered/cited stars
+        ctx.save();
+        ctx.beginPath();
+        const glowGrad = ctx.createRadialGradient(star.x, star.y, star.size, star.x, star.y, star.size * 3.5);
+        glowGrad.addColorStop(0, accentColor);
+        glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glowGrad;
+        
+        ctx.globalAlpha = isCited ? 0.45 : (isMouseOver ? 0.35 : 0.15);
+        ctx.arc(star.x, star.y, star.size * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 8. Pulsing outer orbit circle for cited stars
         if (isCited) {
+          ctx.save();
           ctx.beginPath();
-          const pulse = 10 + Math.sin(Date.now() * 0.005) * 4;
-          const citeGrad = ctx.createRadialGradient(star.x, star.y, star.size, star.x, star.y, star.size + pulse);
-          citeGrad.addColorStop(0, 'rgba(138, 207, 162, 0.4)');
-          citeGrad.addColorStop(1, 'rgba(138, 207, 162, 0)');
-          ctx.fillStyle = citeGrad;
+          const pulse = 8 + Math.sin(Date.now() * 0.005) * 3;
+          ctx.strokeStyle = accentBright;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.005) * 0.2;
           ctx.arc(star.x, star.y, star.size + pulse, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
         }
 
+        // 9. Draw actual star core
         ctx.beginPath();
-        let starColor = isDark ? 'rgba(232, 230, 225, 0.7)' : 'rgba(35, 34, 31, 0.7)';
+        let starColor = isDark ? 'rgba(232, 230, 225, 0.85)' : 'rgba(35, 34, 31, 0.85)';
         if (isCited) {
-          starColor = 'var(--accent-bright)';
+          starColor = accentBright;
         } else if (isMouseOver) {
-          starColor = 'var(--accent-color)';
+          starColor = accentColor;
         }
         
         ctx.fillStyle = starColor;
-        ctx.arc(star.x, star.y, star.size + (isMouseOver ? 2 : 0), 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.size + (isMouseOver ? 1.5 : 0), 0, Math.PI * 2);
         ctx.fill();
 
+        // 10. Star labels (monospace tags)
         if (star.memo.tags && star.memo.tags.length > 0) {
-          ctx.font = '8px Figtree, system-ui';
-          ctx.fillStyle = isDark ? 'rgba(232, 230, 225, 0.3)' : 'rgba(35, 34, 31, 0.3)';
+          ctx.font = '9px var(--font-mono)';
+          ctx.fillStyle = isDark ? 'rgba(232, 230, 225, 0.5)' : 'rgba(35, 34, 31, 0.5)';
           ctx.textAlign = 'center';
-          ctx.fillText(`#${star.memo.tags[0]}`, star.x, star.y - star.size - 4);
+          ctx.fillText(`#${star.memo.tags[0]}`, star.x, star.y - star.size - 5);
         }
       });
 
@@ -2803,7 +2894,7 @@ function GalaxyMap({
     draw();
 
     return () => cancelAnimationFrame(animationFrameRef.current);
-  }, [stars, citations]);
+  }, [stars, citations, backgroundStars]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -2839,8 +2930,25 @@ function GalaxyMap({
         onClick={handleClick}
         style={{ display: 'block', width: '100%', height: '100%' }}
       />
-      <div className="galaxy-map-hud" style={{ position: 'absolute', top: '10px', left: '15px', pointerEvents: 'none', fontFamily: 'var(--font-sans)', fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        🌌 Semantic Galaxy Map ({history.length} stars)
+      <div 
+        className="galaxy-map-hud" 
+        style={{ 
+          position: 'absolute', 
+          top: '12px', 
+          left: '15px', 
+          pointerEvents: 'none', 
+          fontFamily: 'var(--font-mono)', 
+          fontSize: '0.6875rem', 
+          color: 'var(--text-muted)', 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.08em',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px'
+        }}
+      >
+        <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>📡 SEMANTIC RADAR / CONCEPT CONSTELS</span>
+        <span style={{ fontSize: '10px', opacity: 0.8 }}>GRID RESOLUTION: {history.length} STARS / ACTIVE</span>
       </div>
       
       {hoveredMemo && (
