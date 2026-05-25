@@ -14,6 +14,7 @@
 - [x] Deprecate/drop the unused `inference` shim left from the early public demo
 - [x] Add explicit `Worker.onerror` drain handlers to the LLM and STT clients
 - [x] Refine brand logo design (dynamic SVG waveform) and download model button visual layout (v0.0.1.0)
+- [x] Standardize mobile touch targets to 44px (segment-btn, style-list-btn) and secure mobile nav bar layout overrides (v0.0.1.0)
 
 
 ## Open / Deferred Tasks

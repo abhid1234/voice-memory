@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.0.1.0] - 2026-05-23
+## [0.0.1.0] - 2026-05-25
 
 ### Added
 - **Theme-Adaptive Dynamic Logo**: Swapped the static image logo for an inline, dynamic HSL-themed vector SVG logo component that adapts to the application's dark mode and accent theme.
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Model Download Gate Redesign**: Redesigned the WebGPU/Gemma on-device model download gateway and load-error screens to use premium Obsidian-style buttons with descriptive inline SVG icons.
 - **Visual & Style Refinement**: Adjusted application container margins, button icons, and element alignments in `App.css` for a more balanced layout.
+- **Mobile Touch Targets and Navigation Layout**: Standardized touch targets to at least 44px for segment buttons and settings controls, and added high-priority positioning overrides to the mobile bottom navigation bar to prevent UI overlap.
 
 ## [0.0.0.4] - 2026-05-22
 
