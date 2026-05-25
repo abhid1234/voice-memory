@@ -498,6 +498,7 @@ function App() {
   // Cancel tour if user navigates away from the required tab
   useEffect(() => {
     if (tourStep !== null && tourStep >= 1 && tourStep <= 3 && activeTab !== 'dictation') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTourStep(null);
     }
   }, [activeTab, tourStep]);
