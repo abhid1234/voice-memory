@@ -281,7 +281,19 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 1rem 0;
+  height: 240px;
+  padding: 0;
+}
+
+.record-button-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2;
 }
 
 .editorial-record-btn {
@@ -323,6 +335,10 @@ body {
 }
 
 .timer-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -333,8 +349,8 @@ body {
   font-size: var(--fs-base);
   font-weight: 600;
   color: var(--text-main);
-  margin-top: 1rem;
   box-shadow: var(--shadow-sm);
+  z-index: 3;
 }
 
 .live-dot {
@@ -1147,6 +1163,8 @@ body {
 /* Concentric Speech Level Volume Ripples */
 .volume-ripple {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 140px;
   height: 140px;
   border-radius: 50%;
@@ -1172,35 +1190,37 @@ body {
 
 /* Model Loading Linear Progress Bar */
 .download-progress-container {
-  margin-bottom: 1.2rem;
-  background: rgba(18, 18, 16, 0.02);
-  border: 1px solid var(--card-border);
-  padding: 0.8rem 1rem;
-  border-radius: var(--radius-md);
-  text-align: left;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(18, 18, 16, 0.03);
+  border-bottom: 1px solid var(--card-border);
+  padding: 0;
+  margin: 0;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  overflow: hidden;
+  z-index: 10;
 }
 
 .download-progress-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  margin-bottom: 0.4rem;
-  font-weight: 500;
+  display: none;
 }
 
 .download-progress-track {
   width: 100%;
-  height: 6px;
-  background: rgba(18, 18, 16, 0.05);
-  border-radius: 100px;
+  height: 100%;
+  background: transparent;
+  border-radius: 0;
   overflow: hidden;
 }
 
 .download-progress-bar {
   height: 100%;
   background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-bright) 100%);
-  border-radius: 100px;
+  border-radius: 0;
   transition: width 0.2s ease-out;
 }
 

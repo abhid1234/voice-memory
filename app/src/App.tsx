@@ -1326,29 +1326,31 @@ function App() {
                 {/* Tactical Pulsating Button with Speech Level Concentric Circles */}
                 <div className="record-wrapper" id="tour-record-btn" ref={recordWrapperRef}>
                   <canvas className="waveform-canvas" ref={canvasRef} />
-                  {isRecording && (
-                    <>
-                      <div className="volume-ripple ripple-1"></div>
-                      <div className="volume-ripple ripple-2"></div>
-                      <div className="volume-ripple ripple-3"></div>
-                    </>
-                  )}
-                  <button 
-                    className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
-                    onClick={handleRecordToggle}
-                    disabled={isTogglingRecord}
-                    aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
-                    aria-pressed={isRecording}
-                  >
-                    <span className="icon-mic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg style={{ width: '24px', height: '24px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                        <line x1="12" x2="12" y1="19" y2="22" />
-                      </svg>
-                    </span>
-                    <span className="btn-label">{isRecording ? 'Tap to Stop' : 'Start Dictation'}</span>
-                  </button>
+                  <div className="record-button-container">
+                    {isRecording && (
+                      <>
+                        <div className="volume-ripple ripple-1"></div>
+                        <div className="volume-ripple ripple-2"></div>
+                        <div className="volume-ripple ripple-3"></div>
+                      </>
+                    )}
+                    <button 
+                      className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
+                      onClick={handleRecordToggle}
+                      disabled={isTogglingRecord}
+                      aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
+                      aria-pressed={isRecording}
+                    >
+                      <span className="icon-mic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg style={{ width: '24px', height: '24px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                          <line x1="12" x2="12" y1="19" y2="22" />
+                        </svg>
+                      </span>
+                      <span className="btn-label">{isRecording ? 'Tap to Stop' : 'Start Dictation'}</span>
+                    </button>
+                  </div>
                   {isRecording && (
                     <div className="timer-badge">
                       <span className="live-dot"></span>
