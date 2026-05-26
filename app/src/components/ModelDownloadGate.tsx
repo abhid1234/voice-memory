@@ -9,7 +9,7 @@ import { getInference } from "../lib/inference";
 
 const VARIANT: GemmaVariant = "E2B"; // Chromebook can switch to 'E4B' (Task 1 spike)
 
-type State =
+export type AssetState =
   | "checking"
   | "no-webgpu"
   | "needs-download"
@@ -20,10 +20,14 @@ type State =
 
 export default function ModelDownloadGate({
   children,
+  onStateChange,
+  inline = false,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  onStateChange?: (state: AssetState) => void;
+  inline?: boolean;
 }) {
-  const [state, setState] = useState<State>("checking");
+  const [state, setState] = useState<AssetState>("checking");
   const [pct, setPct] = useState(0);
 
   useEffect(() => {
@@ -33,6 +37,11 @@ export default function ModelDownloadGate({
       setState((await isModelCached(VARIANT)) ? "loading" : "needs-download");
     })();
   }, []);
+
+  // Notify parent of state changes if callback is provided
+  useEffect(() => {
+    onStateChange?.(state);
+  }, [state, onStateChange]);
 
   // Load the model into the worker, and surface a failure (e.g. a corrupt or
   // partial cache) instead of rendering the query UI on a false "ready" state.
@@ -64,6 +73,110 @@ export default function ModelDownloadGate({
     }
   };
 
+  if (inline) {
+    if (state === "ready") {
+      return (
+        <div className="model-status-badge">
+          <span className="status-dot green"></span>
+          <span className="status-text">AI Synthesis Active (Gemma 4 E2B)</span>
+        </div>
+      );
+    }
+    if (state === "checking") {
+      return (
+        <div className="model-gate-card-inline checking-state">
+          <div className="gate-spinner-small"></div>
+          <span className="status-text">Checking AI hardware and cache status…</span>
+        </div>
+      );
+    }
+    if (state === "no-webgpu") {
+      return (
+        <div className="model-gate-card-inline warning-card">
+          <span className="warning-icon" style={{ fontSize: '1.25rem', marginRight: '0.2rem' }}>⚠️</span>
+          <span className="status-text">
+            Offline AI synthesis requires WebGPU (unsupported on this browser). Semantic search is active.
+          </span>
+        </div>
+      );
+    }
+    if (state === "downloading") {
+      return (
+        <div className="model-gate-card-inline downloading-state">
+          <div className="gate-title-row">
+            <h4 className="gate-title-inline">Downloading AI Model (One-Time Setup)</h4>
+            <span className="progress-percent" style={{ fontSize: 'var(--fs-sm)' }}>{pct}%</span>
+          </div>
+          <div className="progress-bar-container" style={{ margin: '0.4rem 0 0.2rem 0', maxWidth: 'none' }}>
+            <div className="progress-bar-fill" style={{ width: `${pct}%` }}></div>
+          </div>
+          <span className="status-text" style={{ fontSize: 'var(--fs-xs)' }}>
+            Retrieving 2.2GB model weights locally. Feel free to use semantic search in the meantime.
+          </span>
+        </div>
+      );
+    }
+    if (state === "loading") {
+      return (
+        <div className="model-gate-card-inline loading-state">
+          <div className="gate-spinner-small"></div>
+          <span className="status-text">Initializing offline neural engine. This may take a few seconds...</span>
+        </div>
+      );
+    }
+    if (state === "load-error") {
+      return (
+        <div className="model-gate-card-inline error-card">
+          <span className="error-icon" style={{ fontSize: '1.25rem', marginRight: '0.2rem' }}>❌</span>
+          <div className="gate-content">
+            <span className="status-text">AI engine failed to load (low device memory or WebGPU issue).</span>
+            <button className="gate-btn-small" onClick={() => setState("loading")}>
+              <span>Retry Load</span>
+              <svg 
+                style={{ width: '12px', height: '12px', strokeWidth: 2.5 }} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      );
+    }
+    // needs-download
+    return (
+      <div className="model-gate-card-inline download-request-card">
+        <span className="sparkle-icon" style={{ fontSize: '1.25rem', marginRight: '0.2rem' }}>✨</span>
+        <div className="gate-content">
+          <p className="status-text">
+            Activate local AI synthesis to get customized summaries of your memories (2.2GB download).
+          </p>
+          <button className="gate-btn-small" onClick={download}>
+            <span>Activate AI Synthesis</span>
+            <svg 
+              style={{ width: '12px', height: '12px', strokeWidth: 2.5 }} 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Original Full-screen wrapped rendering (compatibility mode for existing tests)
   if (state === "ready") return <>{children}</>;
   if (state === "checking")
     return (

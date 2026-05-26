@@ -182,6 +182,7 @@ function App() {
   const [isAnswering, setIsAnswering] = useState(false)
   const [answer, setAnswer] = useState('')
   const [citations, setCitations] = useState<VoiceMemo[]>([])
+  const [modelState, setModelState] = useState<string>('checking')
 
   // Wispr Flow dictation states
   const [dictationStyle, setDictationStyle] = useState<'cleaned' | 'bullets' | 'email' | 'slack' | 'custom' | 'raw'>('cleaned')
@@ -1057,14 +1058,19 @@ function App() {
       const memos = (await getAllMemos()).filter((m) => m.embedding?.length)
       const { context, citations } = retrieve(queryVec, memos, 5)
       setCitations(citations)
-      setAnswer('')
-      let acc = ''
-      const final = await getInference().generateResponse(query, context, (token) => {
-        acc += token
-        setAnswer(acc)
-      })
-      setAnswer(final)
-      speak(final)
+      
+      if (modelState === 'ready' && getInference().isReady()) {
+        setAnswer('')
+        let acc = ''
+        const final = await getInference().generateResponse(query, context, (token) => {
+          acc += token
+          setAnswer(acc)
+        })
+        setAnswer(final)
+        speak(final)
+      } else {
+        setAnswer('Semantic search complete! Matching memories have been cited below. (To get a synthesized AI response, activate the offline AI engine below.)')
+      }
     } catch (error) {
       console.error('Query failed:', error)
       setAnswer('Sorry, I hit an error answering from your memories.')
@@ -1819,52 +1825,52 @@ function App() {
         )}
 
         {activeTab === 'query' && (
-          <ModelDownloadGate>
-            <main className="query-workspace">
-              <div className="query-card">
-                <h2 className="workspace-heading">Search Memories</h2>
-                <p className="workspace-subheading">Ask questions about everything you have ever dictated. Retrieval and synthesis runs locally.</p>
-                
-                <div className="query-input-wrapper">
-                  <input 
-                    type="text" 
-                    className="query-large-input"
-                    placeholder="e.g. What did I dictate about the Q3 launch plan?" 
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
-                  />
-                  <button className="query-submit-btn" onClick={handleQuery} disabled={isAnswering}>
-                    {isAnswering ? '...' : 'Search'}
-                  </button>
-                </div>
-
-                <div className="answer-workspace">
-                  {answer && (
-                    <div className="editorial-answer">
-                      <h4 className="answer-heading">AI Response</h4>
-                      <p className="answer-body">{answer}</p>
-                      
-                      {citations.length > 0 && (
-                        <div className="answer-sources">
-                          <h5 className="sources-heading">Cited Memories</h5>
-                          <div className="sources-grid">
-                            {citations.map((cite, i) => (
-                              <div key={i} className="source-item">
-                                <span className="source-index">Source [{i + 1}]</span>
-                                <p className="source-text">"{cite.transcript}"</p>
-                                <span className="source-date">{new Date(cite.timestamp).toLocaleDateString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+          <main className="query-workspace">
+            <div className="query-card">
+              <h2 className="workspace-heading">Search Memories</h2>
+              <p className="workspace-subheading">Ask questions about everything you have ever dictated. Retrieval and synthesis runs locally.</p>
+              
+              <div className="query-input-wrapper">
+                <input 
+                  type="text" 
+                  className="query-large-input"
+                  placeholder="e.g. What did I dictate about the Q3 launch plan?" 
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
+                />
+                <button className="query-submit-btn" onClick={handleQuery} disabled={isAnswering}>
+                  {isAnswering ? '...' : 'Search'}
+                </button>
               </div>
-            </main>
-          </ModelDownloadGate>
+
+              <div className="answer-workspace">
+                {answer && (
+                  <div className="editorial-answer">
+                    <h4 className="answer-heading">AI Response</h4>
+                    <p className="answer-body">{answer}</p>
+                    
+                    {citations.length > 0 && (
+                      <div className="answer-sources">
+                        <h5 className="sources-heading">Cited Memories</h5>
+                        <div className="sources-grid">
+                          {citations.map((cite, i) => (
+                            <div key={i} className="source-item">
+                              <span className="source-index">Source [{i + 1}]</span>
+                              <p className="source-text">"{cite.transcript}"</p>
+                              <span className="source-date">{new Date(cite.timestamp).toLocaleDateString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <ModelDownloadGate inline onStateChange={setModelState} />
+            </div>
+          </main>
         )}
 
         {activeTab === 'timeline' && (

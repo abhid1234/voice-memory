@@ -3656,3 +3656,160 @@ body {
   }
 }
 
+/* Inline Model Download Gate & Status Styles */
+.model-gate-card-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  margin-top: 1.2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+[data-theme="dark"] .model-gate-card-inline {
+  background: rgba(22, 29, 25, 0.45);
+  backdrop-filter: blur(20px);
+}
+
+.model-gate-card-inline.warning-card {
+  border-color: rgba(230, 162, 60, 0.3);
+  background: rgba(230, 162, 60, 0.05);
+}
+
+.model-gate-card-inline.error-card {
+  border-color: rgba(245, 108, 108, 0.3);
+  background: rgba(245, 108, 108, 0.05);
+}
+
+.model-gate-card-inline.downloading-state {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.model-gate-card-inline .gate-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.model-gate-card-inline .gate-title-inline {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.model-gate-card-inline .status-text {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.model-gate-card-inline .gate-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.gate-spinner-small {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--card-border);
+  border-top: 2px solid var(--accent-color);
+  border-radius: 50%;
+  animation: gateSpinnerRotate 1s linear infinite;
+  flex-shrink: 0;
+}
+
+.gate-btn-small {
+  background: var(--accent-color);
+  color: var(--bg-color);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.gate-btn-small:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--accent-light);
+  filter: brightness(1.08);
+}
+
+.gate-btn-small:active {
+  transform: translateY(0);
+}
+
+.model-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  font-size: 0.85rem;
+  margin-top: 1.2rem;
+}
+
+[data-theme="dark"] .model-status-badge {
+  background: rgba(22, 29, 25, 0.25);
+}
+
+.model-status-badge .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.model-status-badge .status-dot.green {
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px var(--accent-color);
+}
+
+.model-status-badge .status-text {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Mobile responsive adjustments for inline cards */
+@media (max-width: 768px) {
+  .model-gate-card-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+  
+  .model-gate-card-inline .gate-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .gate-btn-small {
+    width: 100%;
+  }
+}
+
+
