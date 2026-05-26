@@ -1262,6 +1262,29 @@ function App() {
                     </li>
                   </ul>
                 </div>
+                {!isStandalone && (
+                  <div style={{ marginTop: '1.2rem', borderTop: '1px dashed var(--card-border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-start' }}>
+                    <button 
+                      className="pwa-install-inline-btn"
+                      onClick={() => {
+                        if (deferredPrompt) {
+                          handleInstallApp();
+                        } else if (isIOS) {
+                          alert("To install VoiceMemory on iOS, tap the Share button in Safari and select 'Add to Home Screen'.");
+                        } else {
+                          alert("To install as a PWA, please click the Install/Download icon in your browser's address bar (or menu) and select 'Install VoiceMemory'.");
+                        }
+                      }}
+                    >
+                      <svg style={{ width: '16px', height: '16px', marginRight: '0.5rem', stroke: 'currentColor', fill: 'none', strokeWidth: 2.5 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download PWA App
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* AI Engine Model Card */}
@@ -1326,29 +1349,31 @@ function App() {
                 {/* Tactical Pulsating Button with Speech Level Concentric Circles */}
                 <div className="record-wrapper" id="tour-record-btn" ref={recordWrapperRef}>
                   <canvas className="waveform-canvas" ref={canvasRef} />
-                  {isRecording && (
-                    <>
-                      <div className="volume-ripple ripple-1"></div>
-                      <div className="volume-ripple ripple-2"></div>
-                      <div className="volume-ripple ripple-3"></div>
-                    </>
-                  )}
-                  <button 
-                    className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
-                    onClick={handleRecordToggle}
-                    disabled={isTogglingRecord}
-                    aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
-                    aria-pressed={isRecording}
-                  >
-                    <span className="icon-mic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg style={{ width: '24px', height: '24px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
-                        <line x1="12" x2="12" y1="19" y2="22" />
-                      </svg>
-                    </span>
-                    <span className="btn-label">{isRecording ? 'Tap to Stop' : 'Start Dictation'}</span>
-                  </button>
+                  <div className="record-button-container">
+                    {isRecording && (
+                      <>
+                        <div className="volume-ripple ripple-1"></div>
+                        <div className="volume-ripple ripple-2"></div>
+                        <div className="volume-ripple ripple-3"></div>
+                      </>
+                    )}
+                    <button 
+                      className={`editorial-record-btn ${isRecording ? 'recording' : ''}`} 
+                      onClick={handleRecordToggle}
+                      disabled={isTogglingRecord}
+                      aria-label={isRecording ? 'Stop Recording' : 'Start Recording'}
+                      aria-pressed={isRecording}
+                    >
+                      <span className="icon-mic" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg style={{ width: '24px', height: '24px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                          <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                          <line x1="12" x2="12" y1="19" y2="22" />
+                        </svg>
+                      </span>
+                      <span className="btn-label">{isRecording ? 'Tap to Stop' : 'Start Dictation'}</span>
+                    </button>
+                  </div>
                   {isRecording && (
                     <div className="timer-badge">
                       <span className="live-dot"></span>
