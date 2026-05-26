@@ -1262,6 +1262,29 @@ function App() {
                     </li>
                   </ul>
                 </div>
+                {!isStandalone && (
+                  <div style={{ marginTop: '1.2rem', borderTop: '1px dashed var(--card-border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-start' }}>
+                    <button 
+                      className="pwa-install-inline-btn"
+                      onClick={() => {
+                        if (deferredPrompt) {
+                          handleInstallApp();
+                        } else if (isIOS) {
+                          alert("To install VoiceMemory on iOS, tap the Share button in Safari and select 'Add to Home Screen'.");
+                        } else {
+                          alert("To install as a PWA, please click the Install/Download icon in your browser's address bar (or menu) and select 'Install VoiceMemory'.");
+                        }
+                      }}
+                    >
+                      <svg style={{ width: '16px', height: '16px', marginRight: '0.5rem', stroke: 'currentColor', fill: 'none', strokeWidth: 2.5 }} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download PWA App
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* AI Engine Model Card */}

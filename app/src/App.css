@@ -1758,6 +1758,33 @@ body {
   color: var(--text-main);
 }
 
+.pwa-install-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-bright) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(78, 126, 96, 0.15);
+  font-family: var(--font-sans);
+}
+
+.pwa-install-inline-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(78, 126, 96, 0.25);
+}
+
+.pwa-install-inline-btn:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 600px) {
   .pwa-install-banner {
     bottom: 1rem;
