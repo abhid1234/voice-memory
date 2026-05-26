@@ -3841,7 +3841,7 @@ body {
   font-family: var(--font-mono);
 }
 
-/* Mobile responsive adjustments for inline cards */
+/* Mobile responsive adjustments for inline cards and search */
 @media (max-width: 768px) {
   .model-gate-card-inline {
     flex-direction: column;
@@ -3855,6 +3855,18 @@ body {
   }
   
   .gate-btn-small {
+    width: 100%;
+  }
+
+  .query-input-wrapper {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .query-submit-btn {
+    padding: 1rem 2rem;
+    height: 52px;
     width: 100%;
   }
 }
