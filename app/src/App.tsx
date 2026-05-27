@@ -11,6 +11,8 @@ import ModelDownloadGate from './components/ModelDownloadGate'
 import Demo from './pages/Demo'
 import { playRecordStartSound, playRecordStopSound, playSuccessSound, playDeleteSound, playUndoSound } from './lib/synth'
 import { computeWordDiff } from './lib/diff'
+import { checkForOAuthToken, initiateGoogleOAuth, appendMemosToGoogleSheet } from './lib/google-sheets'
+import { testFirebaseConnection, pushMemosToFirestore, pullMemosFromFirestore } from './lib/firebase'
 
 // Inline SVG Icon Components
 const MicIcon = () => (
@@ -263,6 +265,29 @@ function App() {
   const [isDoctorOpen, setIsDoctorOpen] = useState(false);
   const [doctorQuota, setDoctorQuota] = useState('Estimating...');
   const [doctorCacheSize, setDoctorCacheSize] = useState('Estimating...');
+
+  // Engine Settings Tabs & State
+  const [settingsTab, setSettingsTab] = useState<'system' | 'gemini' | 'firebase' | 'sheets' | 'hosting'>('system');
+  
+  // Gemini API Cloud State
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
+  const [geminiEnabled, setGeminiEnabled] = useState(() => localStorage.getItem('gemini_enabled') === 'true');
+  const [geminiTestStatus, setGeminiTestStatus] = useState<string>('');
+
+  // Firebase Sync State
+  const [firebaseApiKey, setFirebaseApiKey] = useState(() => localStorage.getItem('firebase_api_key') || '');
+  const [firebaseProjectId, setFirebaseProjectId] = useState(() => localStorage.getItem('firebase_project_id') || '');
+  const [firebaseEncryptEnabled, setFirebaseEncryptEnabled] = useState(() => localStorage.getItem('firebase_encrypt_enabled') === 'true');
+  const [firebaseEncryptPassword, setFirebaseEncryptPassword] = useState(() => localStorage.getItem('firebase_encrypt_password') || '');
+  const [firebaseTestStatus, setFirebaseTestStatus] = useState<string>('');
+  const [firebaseSyncStatus, setFirebaseSyncStatus] = useState<string>('');
+
+  // Google Sheets State
+  const [googleClientId, setGoogleClientId] = useState(() => localStorage.getItem('google_client_id') || '');
+  const [googleSpreadsheetId, setGoogleSpreadsheetId] = useState(() => localStorage.getItem('google_spreadsheet_id') || '');
+  const [googleSheetName, setGoogleSheetName] = useState(() => localStorage.getItem('google_sheet_name') || 'Sheet1');
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
+  const [googleSheetsStatus, setGoogleSheetsStatus] = useState<string>('');
 
   // Accent selector state
   const [accentTheme, setAccentTheme] = useState<'emerald' | 'violet' | 'ocean' | 'amber'>(() => {
@@ -794,6 +819,142 @@ function App() {
   const openDoctor = async () => {
     setIsDoctorOpen(true);
     fetchStorageMetrics();
+  };
+
+  useEffect(() => {
+    const { token, state } = checkForOAuthToken();
+    if (token && state === 'google_sheets_export') {
+      setGoogleAccessToken(token);
+      setStatusText('Google Account connected successfully! Ready to export.');
+      setIsDoctorOpen(true);
+      setSettingsTab('sheets');
+    }
+  }, []);
+
+  const testGeminiAPI = async () => {
+    if (!geminiApiKey.trim()) {
+      setGeminiTestStatus('❌ Please enter an API key');
+      return;
+    }
+    setGeminiTestStatus('⏳ Testing connection...');
+    try {
+      const { generateGeminiResponse } = await import('./lib/gemini');
+      await generateGeminiResponse(geminiApiKey, 'Respond with the word: OK');
+      setGeminiTestStatus('✅ Connection successful!');
+      localStorage.setItem('gemini_api_key', geminiApiKey);
+    } catch (err: any) {
+      console.error(err);
+      setGeminiTestStatus(`❌ Error: ${err.message || err}`);
+    }
+  };
+
+  const testFirebase = async () => {
+    if (!firebaseApiKey.trim() || !firebaseProjectId.trim()) {
+      setFirebaseTestStatus('❌ Please enter API Key and Project ID');
+      return;
+    }
+    setFirebaseTestStatus('⏳ Testing connection...');
+    try {
+      const ok = await testFirebaseConnection(firebaseApiKey, firebaseProjectId);
+      if (ok) {
+        setFirebaseTestStatus('✅ Connection successful!');
+        localStorage.setItem('firebase_api_key', firebaseApiKey);
+        localStorage.setItem('firebase_project_id', firebaseProjectId);
+      } else {
+        setFirebaseTestStatus('❌ Connection failed. Check credentials/rules.');
+      }
+    } catch (err: any) {
+      setFirebaseTestStatus(`❌ Error: ${err.message || err}`);
+    }
+  };
+
+  const handleFirebasePush = async () => {
+    if (!firebaseApiKey.trim() || !firebaseProjectId.trim()) {
+      setFirebaseSyncStatus('❌ Configure credentials first.');
+      return;
+    }
+    setFirebaseSyncStatus('⏳ Pushing memories to Firestore...');
+    try {
+      const memos = await getAllMemos();
+      const encPassword = firebaseEncryptEnabled ? firebaseEncryptPassword : undefined;
+      await pushMemosToFirestore(firebaseApiKey, firebaseProjectId, memos, encPassword);
+      playSuccessSound();
+      setFirebaseSyncStatus(`✅ Successfully pushed ${memos.length} memories!`);
+      setStatusText(`Pushed ${memos.length} memories to Firestore.`);
+    } catch (err: any) {
+      console.error(err);
+      setFirebaseSyncStatus(`❌ Push failed: ${err.message || err}`);
+    }
+  };
+
+  const handleFirebasePull = async () => {
+    if (!firebaseApiKey.trim() || !firebaseProjectId.trim()) {
+      setFirebaseSyncStatus('❌ Configure credentials first.');
+      return;
+    }
+    if (!confirm('Are you sure you want to pull from cloud? This will merge cloud memories into your local database.')) return;
+    setFirebaseSyncStatus('⏳ Pulling memories from Firestore...');
+    try {
+      const encPassword = firebaseEncryptEnabled ? firebaseEncryptPassword : undefined;
+      const remoteMemos = await pullMemosFromFirestore(firebaseApiKey, firebaseProjectId, encPassword);
+      
+      const localMemos = await getAllMemos();
+      const localTimestamps = new Set(localMemos.map(m => m.timestamp));
+      
+      let importedCount = 0;
+      for (const memo of remoteMemos) {
+        if (!localTimestamps.has(memo.timestamp)) {
+          const memoToSave = { ...memo };
+          delete memoToSave.id;
+          await saveMemo(memoToSave);
+          importedCount++;
+        }
+      }
+      
+      playSuccessSound();
+      setFirebaseSyncStatus(`✅ Synced! Imported ${importedCount} new memories.`);
+      setStatusText(`Imported ${importedCount} memories from Firestore.`);
+      loadHistory();
+    } catch (err: any) {
+      console.error(err);
+      setFirebaseSyncStatus(`❌ Pull failed: ${err.message || err}`);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    if (!googleClientId.trim()) {
+      setGoogleSheetsStatus('❌ Please enter a Google Client ID');
+      return;
+    }
+    localStorage.setItem('google_client_id', googleClientId);
+    initiateGoogleOAuth(googleClientId);
+  };
+
+  const handleGoogleSheetsExport = async () => {
+    if (!googleSpreadsheetId.trim()) {
+      setGoogleSheetsStatus('❌ Please enter a Google Spreadsheet ID');
+      return;
+    }
+    if (!googleAccessToken) {
+      setGoogleSheetsStatus('❌ Google account not connected');
+      return;
+    }
+    setGoogleSheetsStatus('⏳ Exporting to Google Sheet...');
+    try {
+      const memos = await getAllMemos();
+      await appendMemosToGoogleSheet(
+        googleSpreadsheetId,
+        googleSheetName,
+        googleAccessToken,
+        memos
+      );
+      playSuccessSound();
+      setGoogleSheetsStatus('✅ Successfully exported all memories!');
+      setStatusText('Exported memories to Google Sheet.');
+    } catch (err: any) {
+      console.error(err);
+      setGoogleSheetsStatus(`❌ Export failed: ${err.message || err}`);
+    }
   };
 
   const handleWipeDatabase = async () => {
@@ -2297,37 +2458,314 @@ function App() {
         <div className="doctor-modal-overlay" onClick={() => setIsDoctorOpen(false)}>
           <div className="doctor-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="doctor-modal-header">
-              <h3 className="doctor-modal-title">🩺 Offline Engine Doctor</h3>
-              <button className="doctor-modal-close" onClick={() => setIsDoctorOpen(false)} aria-label="Close Engine Doctor">✕</button>
+              <h3 className="doctor-modal-title">⚙️ Settings & Integrations</h3>
+              <button className="doctor-modal-close" onClick={() => setIsDoctorOpen(false)} aria-label="Close Settings">✕</button>
             </div>
-            <div className="doctor-metrics-grid">
-              <div className="doctor-metric-card">
-                <span className="metric-icon">🚀</span>
-                <div className="metric-info">
-                  <strong>WebGPU Acceleration</strong>
-                  <p>{'gpu' in navigator ? '✅ Available (Accelerated local inference)' : '⚠️ Unsupported (Slower WASM/CPU fallback)'}</p>
-                </div>
-              </div>
-              <div className="doctor-metric-card">
-                <span className="metric-icon">💾</span>
-                <div className="metric-info">
-                  <strong>IndexedDB Space</strong>
-                  <p>{doctorQuota}</p>
-                </div>
-              </div>
-              <div className="doctor-metric-card">
-                <span className="metric-icon">📦</span>
-                <div className="metric-info">
-                  <strong>Model Cache Storage</strong>
-                  <p>{doctorCacheSize}</p>
-                </div>
-              </div>
+
+            <div className="doctor-modal-tabs">
+              <button type="button" className={`settings-tab-btn ${settingsTab === 'system' ? 'active' : ''}`} onClick={() => setSettingsTab('system')}>🩺 System</button>
+              <button type="button" className={`settings-tab-btn ${settingsTab === 'gemini' ? 'active' : ''}`} onClick={() => setSettingsTab('gemini')}>✨ Gemini AI</button>
+              <button type="button" className={`settings-tab-btn ${settingsTab === 'firebase' ? 'active' : ''}`} onClick={() => setSettingsTab('firebase')}>🔥 Firebase Sync</button>
+              <button type="button" className={`settings-tab-btn ${settingsTab === 'sheets' ? 'active' : ''}`} onClick={() => setSettingsTab('sheets')}>📊 Google Sheets</button>
+              <button type="button" className={`settings-tab-btn ${settingsTab === 'hosting' ? 'active' : ''}`} onClick={() => setSettingsTab('hosting')}>☁️ Self-Hosting</button>
             </div>
-            <div className="doctor-actions-row">
-              <button className="doctor-clear-btn" onClick={clearAppCaches}>
-                🗑️ Clear Model Cache
-              </button>
-              <button className="doctor-close-btn" onClick={() => setIsDoctorOpen(false)}>
+
+            <div className="settings-tab-content" style={{ minHeight: '260px' }}>
+              {settingsTab === 'system' && (
+                <>
+                  <div className="doctor-metrics-grid">
+                    <div className="doctor-metric-card">
+                      <span className="metric-icon">🚀</span>
+                      <div className="metric-info">
+                        <strong>WebGPU Acceleration</strong>
+                        <p>{'gpu' in navigator ? '✅ Available (Accelerated local inference)' : '⚠️ Unsupported (Slower WASM/CPU fallback)'}</p>
+                      </div>
+                    </div>
+                    <div className="doctor-metric-card">
+                      <span className="metric-icon">💾</span>
+                      <div className="metric-info">
+                        <strong>IndexedDB Space</strong>
+                        <p>{doctorQuota}</p>
+                      </div>
+                    </div>
+                    <div className="doctor-metric-card">
+                      <span className="metric-icon">📦</span>
+                      <div className="metric-info">
+                        <strong>Model Cache Storage</strong>
+                        <p>{doctorCacheSize}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <h4 style={{ margin: '1.5rem 0 0.6rem 0', fontSize: 'var(--fs-sm)', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Database & Cache Actions</h4>
+                  <div className="doctor-actions-row" style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                    <button type="button" className="doctor-clear-btn" onClick={clearAppCaches} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
+                      🗑️ Clear Model Cache
+                    </button>
+                    <button type="button" className="doctor-clear-btn danger-btn" onClick={handleWipeDatabase} style={{ background: '#3b1c1c', border: '1px solid #5a2c2c', color: '#ff8888', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
+                      💥 Wipe Local Database
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {settingsTab === 'gemini' && (
+                <div className="settings-form-group">
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: 'var(--fs-base)' }}>Gemini Cloud AI Integration</h4>
+                  <p className="model-helper-text" style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginBottom: '1.2rem', lineHeight: '1.5' }}>
+                    Connect your Google AI Studio account to utilize high-performance cloud models. This bypasses the need for the heavy 2.2GB local Gemma model download and offers faster, higher-quality summaries.
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                      <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Gemini API Key</label>
+                      <input 
+                        type="password" 
+                        className="dictionary-input" 
+                        placeholder="AIzaSy..." 
+                        value={geminiApiKey} 
+                        onChange={(e) => {
+                          setGeminiApiKey(e.target.value);
+                          localStorage.setItem('gemini_api_key', e.target.value);
+                        }}
+                        style={{ width: '100%', boxSizing: 'border-box' }}
+                      />
+                      <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                        Get a free key from <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-color)', textDecoration: 'underline' }}>Google AI Studio</a>.
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', margin: '0.4rem 0' }}>
+                      <input 
+                        type="checkbox" 
+                        id="gemini-enabled-chk"
+                        checked={geminiEnabled}
+                        onChange={(e) => {
+                          setGeminiEnabled(e.target.checked);
+                          localStorage.setItem('gemini_enabled', String(e.target.checked));
+                        }}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                      />
+                      <label htmlFor="gemini-enabled-chk" style={{ fontSize: 'var(--fs-sm)', fontWeight: 500, cursor: 'pointer' }}>
+                        Use Cloud Gemini API for transcription polishing & summaries
+                      </label>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginTop: '0.5rem' }}>
+                      <button type="button" className="doctor-clear-btn" onClick={testGeminiAPI} style={{ background: 'var(--accent-color)', color: 'var(--card-bg)', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                        ⚡ Test Connection
+                      </button>
+                      {geminiTestStatus && <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 500 }}>{geminiTestStatus}</span>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'firebase' && (
+                <div className="settings-form-group">
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: 'var(--fs-base)' }}>Firebase Cloud Sync & Backup</h4>
+                  <p className="model-helper-text" style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginBottom: '1.2rem', lineHeight: '1.5' }}>
+                    Sync your saved memories to your personal Firestore database. All records are securely uploaded, with optional client-side encryption (AES-GCM) so only you can read them.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                      <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Firebase API Key</label>
+                        <input 
+                          type="password" 
+                          className="dictionary-input" 
+                          placeholder="AIzaSy..." 
+                          value={firebaseApiKey} 
+                          onChange={(e) => {
+                            setFirebaseApiKey(e.target.value);
+                            localStorage.setItem('firebase_api_key', e.target.value);
+                          }}
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Firebase Project ID</label>
+                        <input 
+                          type="text" 
+                          className="dictionary-input" 
+                          placeholder="my-project-123" 
+                          value={firebaseProjectId} 
+                          onChange={(e) => {
+                            setFirebaseProjectId(e.target.value);
+                            localStorage.setItem('firebase_project_id', e.target.value);
+                          }}
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ border: '1px solid var(--card-border)', padding: '1rem', borderRadius: '8px', background: 'var(--bg-color)', marginTop: '0.2rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem' }}>
+                        <input 
+                          type="checkbox" 
+                          id="firebase-encrypt-chk"
+                          checked={firebaseEncryptEnabled}
+                          onChange={(e) => {
+                            setFirebaseEncryptEnabled(e.target.checked);
+                            localStorage.setItem('firebase_encrypt_enabled', String(e.target.checked));
+                          }}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="firebase-encrypt-chk" style={{ fontSize: 'var(--fs-sm)', fontWeight: 600, cursor: 'pointer' }}>
+                          🔒 Enable Client-Side Encryption
+                        </label>
+                      </div>
+
+                      {firebaseEncryptEnabled && (
+                        <div>
+                          <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Encryption Passcode</label>
+                          <input 
+                            type="password" 
+                            className="dictionary-input" 
+                            placeholder="Secret password for local encryption" 
+                            value={firebaseEncryptPassword} 
+                            onChange={(e) => {
+                              setFirebaseEncryptPassword(e.target.value);
+                              localStorage.setItem('firebase_encrypt_password', e.target.value);
+                            }}
+                            style={{ width: '100%', boxSizing: 'border-box', background: 'var(--card-bg)' }}
+                          />
+                          <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: '0.3rem', display: 'block', lineHeight: '1.3' }}>
+                            ⚠️ Your transcripts will be encrypted with PBKDF2/AES-GCM before upload. Keep this passcode safe—lost passwords cannot be recovered, rendering backups unreadable.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.5rem' }}>
+                      <button type="button" className="doctor-clear-btn" onClick={testFirebase} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
+                        🔍 Test Connection
+                      </button>
+                      <button type="button" className="doctor-clear-btn" onClick={handleFirebasePush} style={{ background: 'var(--accent-color)', color: 'var(--card-bg)', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                        📤 Backup (Push to Cloud)
+                      </button>
+                      <button type="button" className="doctor-clear-btn" onClick={handleFirebasePull} style={{ background: 'var(--card-bg)', border: '1px solid var(--accent-color)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
+                        📥 Restore (Pull from Cloud)
+                      </button>
+                    </div>
+                    {(firebaseTestStatus || firebaseSyncStatus) && (
+                      <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 500, padding: '0.2rem 0' }}>
+                        {firebaseTestStatus && <div>Status: {firebaseTestStatus}</div>}
+                        {firebaseSyncStatus && <div>Sync: {firebaseSyncStatus}</div>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'sheets' && (
+                <div className="settings-form-group">
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: 'var(--fs-base)' }}>Google Sheets Export</h4>
+                  <p className="model-helper-text" style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginBottom: '1.2rem', lineHeight: '1.5' }}>
+                    Export all transcribed voice memories and tags directly to a sheet in your Google Drive. 
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                      <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Google Client ID</label>
+                        <input 
+                          type="text" 
+                          className="dictionary-input" 
+                          placeholder="12345-abcde.apps.googleusercontent.com" 
+                          value={googleClientId} 
+                          onChange={(e) => {
+                            setGoogleClientId(e.target.value);
+                            localStorage.setItem('google_client_id', e.target.value);
+                          }}
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Google Spreadsheet ID</label>
+                        <input 
+                          type="text" 
+                          className="dictionary-input" 
+                          placeholder="1sA2B3c..." 
+                          value={googleSpreadsheetId} 
+                          onChange={(e) => {
+                            setGoogleSpreadsheetId(e.target.value);
+                            localStorage.setItem('google_spreadsheet_id', e.target.value);
+                          }}
+                          style={{ width: '100%', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="input-label" style={{ display: 'block', marginBottom: '0.4rem' }}>Sheet Page Name</label>
+                      <input 
+                        type="text" 
+                        className="dictionary-input" 
+                        placeholder="Sheet1" 
+                        value={googleSheetName} 
+                        onChange={(e) => {
+                          setGoogleSheetName(e.target.value);
+                          localStorage.setItem('google_sheet_name', e.target.value);
+                        }}
+                        style={{ width: '100%', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.5rem' }}>
+                      {!googleAccessToken ? (
+                        <button type="button" className="doctor-clear-btn" onClick={handleGoogleLogin} style={{ background: 'var(--accent-color)', color: 'var(--card-bg)', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                          🔑 Connect Google Account
+                        </button>
+                      ) : (
+                        <>
+                          <button type="button" className="doctor-clear-btn" onClick={handleGoogleSheetsExport} style={{ background: 'var(--accent-color)', color: 'var(--card-bg)', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                            📊 Export to Sheets
+                          </button>
+                          <button type="button" className="doctor-clear-btn" onClick={() => setGoogleAccessToken(null)} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
+                            Disconnect
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {googleSheetsStatus && <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 500 }}>{googleSheetsStatus}</span>}
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'hosting' && (
+                <div className="settings-form-group">
+                  <h4 style={{ margin: '0 0 1rem 0', fontSize: 'var(--fs-base)' }}>Cloud Run Self-Hosting</h4>
+                  <p className="model-helper-text" style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginBottom: '1.2rem', lineHeight: '1.5' }}>
+                    Deploy your own private, isolated copy of VoiceMemory to Google Cloud Run in under a minute. 
+                  </p>
+                  
+                  <div style={{ border: '1px solid var(--card-border)', padding: '1rem', borderRadius: '8px', background: 'var(--bg-color)', lineHeight: '1.6' }}>
+                    <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: 'var(--fs-sm)' }}>
+                      <li>Open Google Cloud Shell or install Google Cloud CLI.</li>
+                      <li>Clone this repository: <br/><code>git clone https://github.com/abhid1234/voice-memory.git</code></li>
+                      <li>Run deployment command: <br/><code>gcloud run deploy voice-memory --source . --allow-unauthenticated</code></li>
+                    </ol>
+                  </div>
+                  
+                  <div style={{ marginTop: '1.2rem' }}>
+                    <a 
+                      href="https://github.com/abhid1234/voice-memory/blob/main/docs/self-hosting.md" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="doctor-clear-btn" 
+                      style={{ display: 'inline-block', textDecoration: 'none', background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', textAlign: 'center' }}
+                    >
+                      📖 Read Hosting Guide
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="doctor-modal-footer" style={{ borderTop: '1px solid var(--card-border)', marginTop: '1.2rem', paddingTop: '0.8rem', display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" className="doctor-close-btn" onClick={() => setIsDoctorOpen(false)} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-main)', padding: '0.6rem 1.2rem', borderRadius: '8px', cursor: 'pointer' }}>
                 Close
               </button>
             </div>
