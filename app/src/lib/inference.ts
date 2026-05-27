@@ -125,10 +125,8 @@ export class InferenceClient {
   }
 
   async polishTranscript(rawText: string, style: string, dictionary: string[], customInstruction?: string): Promise<string> {
-    if (!this.ready) {
-      // Return fallback output immediately if the heavy LLM is not ready/downloaded
-      return fallbackPolish(rawText, style, dictionary);
-    }
+    const apiKey = typeof window !== 'undefined' ? localStorage.getItem("gemini_api_key") : null;
+    const geminiEnabled = typeof window !== 'undefined' ? localStorage.getItem("gemini_enabled") === "true" : false;
 
     const styleInstructions: Record<string, string> = {
       cleaned: "Remove filler words, fix grammar and spelling, and output natural, polished prose.",
@@ -156,6 +154,21 @@ export class InferenceClient {
     
     Polished Output:`;
 
+    if (geminiEnabled && apiKey) {
+      try {
+        const { generateGeminiResponse } = await import("./gemini");
+        const response = await generateGeminiResponse(apiKey, systemPrompt);
+        return response.trim();
+      } catch (err) {
+        console.warn("Cloud Gemini polishing failed, falling back to local:", err);
+      }
+    }
+
+    if (!this.ready) {
+      // Return fallback output immediately if the heavy LLM is not ready/downloaded
+      return fallbackPolish(rawText, style, dictionary);
+    }
+
     const prompt = `<start_of_turn>user\n${systemPrompt}<end_of_turn>\n<start_of_turn>model\n`;
 
     try {
@@ -168,15 +181,28 @@ export class InferenceClient {
   }
 
   async generateInsights(text: string): Promise<string> {
-    if (!this.ready) {
-      return fallbackInsights(text);
-    }
+    const apiKey = typeof window !== 'undefined' ? localStorage.getItem("gemini_api_key") : null;
+    const geminiEnabled = typeof window !== 'undefined' ? localStorage.getItem("gemini_enabled") === "true" : false;
 
     const systemPrompt = `You are a productivity helper. Extract a list of action items (todos) and key entities (names, dates, organizations) from the following text. Keep it brief and return it formatted nicely.
     
     Text: "${text}"
     
     Insights:`;
+
+    if (geminiEnabled && apiKey) {
+      try {
+        const { generateGeminiResponse } = await import("./gemini");
+        const response = await generateGeminiResponse(apiKey, systemPrompt);
+        return response.trim();
+      } catch (err) {
+        console.warn("Cloud Gemini insights failed, falling back to local:", err);
+      }
+    }
+
+    if (!this.ready) {
+      return fallbackInsights(text);
+    }
 
     const prompt = `<start_of_turn>user\n${systemPrompt}<end_of_turn>\n<start_of_turn>model\n`;
 

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0.0] - 2026-05-27
+
+### Added
+- **Gemini Cloud AI Integration**: Instantly polish voice recordings and extract action items or key entities using the optional cloud-based `gemini-1.5-flash` model, which acts as a fallback for devices without WebGPU or local AI capabilities.
+- **Firebase Firestore Backup & Sync**: Sync your voice memories across multiple browsers or devices. Memos are encrypted client-side in the browser using PBKDF2-derived keys and AES-GCM encryption before upload to preserve complete data privacy.
+- **Google Sheets Export**: Seamlessly export your polished transcripts, dates, AI insights, and tags directly to a spreadsheet in your Google Drive with a one-click OAuth authorization flow.
+- **Self-Hosting Docker Setup**: Deploy your own private, isolated copy of VoiceMemory to Google Cloud Run or any container hosting platform using our multi-stage Docker build and Nginx container.
+
+### Changed
+- **Redesigned Settings & Integrations Modal**: Replaced the "Offline Engine Doctor" modal with a tabbed dashboard (System, Gemini, Firebase, Google Sheets, Self-Hosting) to manage all configurations and test connections.
+
 ## [0.0.1.0] - 2026-05-25
 
 ### Added

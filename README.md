@@ -67,11 +67,23 @@ v1 ships the honest version: **client-side retrieval over your own memories** (e
 - On-device transcription, retrieval, generation, and speech-out
 - A zero-permission public demo lane (`?demo`) with synthetic memories + precomputed answers
 - Installable PWA (add to home screen, offline-first service worker)
+- Optional cloud integrations (Gemini Cloud API fallback, client-side encrypted Firebase sync, and Google Sheets export)
 
 **Not in v1 (on purpose):**
 - **Live in-meeting recording** — hard browser limits *and* two-party-consent legal complexity. Deferred (would need a native shell).
 - **"Learns your voice" fine-tuning** — deferred to v1.1 (see above).
 - **iOS phone parity** — works great on a laptop / recent Chromebook; Safari's WebGPU + storage durability still need real-device testing. Honest status: phone is in progress.
+
+---
+
+## Optional Cloud Integrations & Self-Hosting
+
+While the core hot-path runs entirely offline on-device, VoiceMemory introduces several optional, user-configured cloud integrations (disabled by default, requiring your own keys/credentials) to bridge workflows and backup data:
+
+- **Gemini Cloud AI fallback**: Use your own Gemini API key for transcript polishing and action-item extraction when WebGPU is unavailable or disabled.
+- **Firebase Firestore Sync**: Backup and sync memories across devices using client-side AES-GCM encryption (passwords never leave your browser).
+- **Google Sheets Export**: One-click OAuth flow to append transcripts, tags, and insights directly to Google Sheets.
+- **Dockerized Self-Hosting**: Run your own private instance of VoiceMemory locally or deploy it to Google Cloud Run (see [Self-Hosting Guide](docs/self-hosting.md)).
 
 ---
 
@@ -112,14 +124,17 @@ Full developer docs, feature details, and project layout live in **[`app/README.
 ```
 voice-memory/
 ├── app/        # React + TypeScript + Vite PWA  (see app/README.md)
-├── docs/       # spec.md (full v1 spec), demo script, research findings
+├── docs/       # spec.md (spec), self-hosting.md, on-device-acceptance.md, demo script
 ├── infra/      # weekly LoRA training pipeline groundwork (deferred to v1.1)
+├── Dockerfile  # Multi-stage container build setup
 ├── STATUS.md   # current state, scope decisions, what's next
 └── CHANGELOG.md
 ```
 
 - **Where the project stands:** [`STATUS.md`](STATUS.md)
 - **Full v1 spec & scope tradeoffs:** [`docs/spec.md`](docs/spec.md)
+- **Self-Hosting on Cloud Run:** [`docs/self-hosting.md`](docs/self-hosting.md)
+- **Manual Acceptance Runbook:** [`docs/on-device-acceptance.md`](docs/on-device-acceptance.md)
 
 ---
 

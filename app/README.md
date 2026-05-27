@@ -14,6 +14,11 @@ A privacy-first, on-device personal voice-memory system that runs in your mobile
   - **Onboarding Spotlight**: SVG-masked interactive tutorial tour for first-time setup.
   - **Theme Switcher**: Organic persisted HSL themes (Emerald, Violet, Ocean, Amber) with instant light/dark toggle.
 - **Weekly LoRA Personalization (Deferred to v1.1)**: Fine-tuning Gemma 4 on custom transcripts via an Anti-gravity cron pipeline is deferred to v1.1 due to Gemma 4 web LoRA gate failure.
+- **Optional Cloud Integrations**: Optional integrations configured via a tabbed settings dashboard:
+  - **Gemini Cloud AI**: Fallback API support for transcript polishing and insight extraction when local WebGPU is missing.
+  - **Firebase Sync**: Encrypted client-side memory sync across browsers/devices using AES-GCM (keys stay local).
+  - **Google Sheets**: OAuth-driven data export to write memory fields directly to user spreadsheets.
+  - **Self-Hosting Docker Setup**: Multi-stage container build for deploying private instances to Cloud Run.
 - **Zero-Permission Public Demo**: Precomputed synthetic memories and local TTS reading responses instantly under 1.5 seconds without microphone or hardware permissions.
 - **Premium Utilities**: Drag-and-drop `.mp3`/`.wav`/`.webm` audio imports, editorial sheet editor with diff view, Web Audio sound synthesis feedback, and rich Markdown/HTML export drawers.
 
@@ -36,6 +41,8 @@ VoiceMemory separates retrieval (facts) from style (voice) to maximize on-device
 voice-memory/
 ├── docs/
 │   ├── spec.md                     # Full v1 spec, scope tradeoffs, and phase plan
+│   ├── self-hosting.md             # Guide to container building and Cloud Run deploy
+│   ├── on-device-acceptance.md     # Steps to manually verify voice capture & offline RAG
 │   ├── demo-video-script.md        # Script for the LinkedIn launch demo walk-through
 │   └── superpowers/
 │       └── phase-d-conversion-findings.md  # Research and converter API signatures
@@ -50,11 +57,12 @@ voice-memory/
 │   │   └── index.css               # Core styling tokens
 │   ├── public/                     # Static files and Web Workers (whisper-worker.js, sw.js)
 │   └── package.json
-└── infra/                          # Vertex AI weekly LoRA training pipeline
-    ├── agent-config.yaml           # Anti-gravity 2.0 cron & job parameters
-    ├── train_config.yaml           # Fine-tuning parameters
-    ├── convert_lora.py             # Script to compile adapter weights to lora.bin
-    └── deploy_pipeline.py          # Script to deploy pipeline
+├── infra/                          # Vertex AI weekly LoRA training pipeline
+│   ├── agent-config.yaml           # Anti-gravity 2.0 cron & job parameters
+│   ├── train_config.yaml           # Fine-tuning parameters
+│   ├── convert_lora.py             # Script to compile adapter weights to lora.bin
+│   └── deploy_pipeline.py          # Script to deploy pipeline
+└── Dockerfile                      # Multi-stage container build configuration
 ```
 
 ---

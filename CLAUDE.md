@@ -21,7 +21,7 @@ Project I in Abhi's `RL & Agentic AI Project Pipeline` tracker. Direct response 
 
 ## Hard constraints — DO NOT VIOLATE
 
-1. **On-device inference only.** No cloud inference in the hot path. Training is the ONLY cloud touch (weekly LoRA on Vertex via Anti-gravity, on user's own signed jobs). Matches the ondeviceml.space thesis.
+1. **On-device inference only in the default offline hot path.** No cloud inference is used for core offline operations. Cloud integrations (Gemini Cloud API fallback, Firebase Sync, and Google Sheets export) are strictly optional user-configured utilities (disabled by default, requiring user API keys/credentials) and must not be forced or activated in the default offline workflow. Matches the ondeviceml.space thesis.
 2. **PWA, not native app.** v1 ships as PWA, not iOS/Android native. Capacitor.js wrapper is v3 and only if/when needed for background recording.
 3. **No live meeting recording in v1.** Voice memos and post-meeting reflections only. Live capture has hard browser limits AND legal complexity (two-party-consent states). v3 problem.
 4. **Don't divert from ODML Research mode or vla-bench.** Both are higher-priority active work per their respective STATUS.md files. VoiceMemory is weekend-shaped, ships in 2 weekends, doesn't compete for their compute budget.
@@ -34,6 +34,8 @@ Project I in Abhi's `RL & Agentic AI Project Pipeline` tracker. Direct response 
 voice-memory/
 ├── docs/
 │   ├── spec.md                     # Full v1 spec, scope tradeoffs, phase plan
+│   ├── self-hosting.md             # Guide to container building and Cloud Run deploy
+│   ├── on-device-acceptance.md     # Steps to manually verify voice capture & offline RAG
 │   ├── demo-video-script.md        # Video walkthrough script
 │   └── superpowers/
 │       └── phase-d-conversion-findings.md  # LoRA conversion findings & signatures
@@ -47,11 +49,12 @@ voice-memory/
 │   │   └── App.css                 # Ethereal design system styles and layout
 │   ├── public/                     # Static assets, Web Workers (whisper-worker.js, manifest.json, sw.js)
 │   └── package.json
-└── infra/                          # Weekly Vertex LoRA training pipeline
-    ├── agent-config.yaml           # Anti-gravity 2.0 cron & job details
-    ├── train_config.yaml           # LoRA training configuration
-    ├── convert_lora.py             # Script to compile TFLite adapters (lora.bin)
-    └── deploy_pipeline.py          # Script to deploy/trigger pipeline
+├── infra/                          # Weekly Vertex LoRA training pipeline
+│   ├── agent-config.yaml           # Anti-gravity 2.0 cron & job details
+│   ├── train_config.yaml           # LoRA training configuration
+│   ├── convert_lora.py             # Script to compile TFLite adapters (lora.bin)
+│   └── deploy_pipeline.py          # Script to deploy/trigger pipeline
+└── Dockerfile                      # Multi-stage container build configuration
 ```
 
 **Stack:**
