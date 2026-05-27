@@ -20,15 +20,17 @@ function toFirestoreValue(val: unknown): unknown {
 }
 
 // Helper to parse Firestore fields back into standard JavaScript types
-function fromFirestoreValue(field: Record<string, any>): any {
-  if (!field) return undefined;
-  if ("stringValue" in field) return field.stringValue;
-  if ("integerValue" in field) return parseInt(field.integerValue, 10);
-  if ("doubleValue" in field) return parseFloat(field.doubleValue);
-  if ("booleanValue" in field) return field.booleanValue;
-  if ("arrayValue" in field) {
-    const vals = field.arrayValue.values || [];
-    return vals.map(fromFirestoreValue);
+function fromFirestoreValue(field: unknown): unknown {
+  if (!field || typeof field !== "object") return undefined;
+  const f = field as Record<string, unknown>;
+  if ("stringValue" in f) return f.stringValue as string;
+  if ("integerValue" in f) return parseInt(f.integerValue as string, 10);
+  if ("doubleValue" in f) return parseFloat(f.doubleValue as string);
+  if ("booleanValue" in f) return f.booleanValue as boolean;
+  if ("arrayValue" in f) {
+    const arrayObj = f.arrayValue as { values?: unknown[] };
+    const vals = arrayObj.values || [];
+    return vals.map((v) => fromFirestoreValue(v));
   }
   return undefined;
 }
@@ -46,7 +48,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
   return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: salt as any,
+      salt: salt as BufferSource,
       iterations: 100000,
       hash: "SHA-256",
     },
@@ -208,13 +210,13 @@ export async function pullMemosFromFirestore(
 
   for (const doc of documents) {
     const fields = doc.fields || {};
-    const id = fromFirestoreValue(fields.id);
-    const timestamp = fromFirestoreValue(fields.timestamp);
-    let transcript = fromFirestoreValue(fields.transcript) || "";
-    let rawTranscript = fromFirestoreValue(fields.rawTranscript) || "";
-    const isEncrypted = fromFirestoreValue(fields.isEncrypted) || false;
-    const tags = fromFirestoreValue(fields.tags);
-    const embeddingArray = fromFirestoreValue(fields.embedding);
+    const id = fromFirestoreValue(fields.id) as number | undefined;
+    const timestamp = fromFirestoreValue(fields.timestamp) as number;
+    let transcript = (fromFirestoreValue(fields.transcript) as string) || "";
+    let rawTranscript = (fromFirestoreValue(fields.rawTranscript) as string) || "";
+    const isEncrypted = (fromFirestoreValue(fields.isEncrypted) as boolean) || false;
+    const tags = fromFirestoreValue(fields.tags) as string[] | undefined;
+    const embeddingArray = fromFirestoreValue(fields.embedding) as number[] | undefined;
 
     if (isEncrypted) {
       if (!encryptionPassword) {
@@ -227,7 +229,7 @@ export async function pullMemosFromFirestore(
         }
       } catch (err) {
         console.error(`Failed to decrypt memo ID ${id}:`, err);
-        throw new Error("Decryption failed. Please check your encryption password.");
+        throw new Error("Decryption failed. Please check your encryption password.", { cause: err });
       }
     }
 

@@ -824,10 +824,12 @@ function App() {
   useEffect(() => {
     const { token, state } = checkForOAuthToken();
     if (token && state === 'google_sheets_export') {
-      setGoogleAccessToken(token);
-      setStatusText('Google Account connected successfully! Ready to export.');
-      setIsDoctorOpen(true);
-      setSettingsTab('sheets');
+      setTimeout(() => {
+        setGoogleAccessToken(token);
+        setStatusText('Google Account connected successfully! Ready to export.');
+        setIsDoctorOpen(true);
+        setSettingsTab('sheets');
+      }, 0);
     }
   }, []);
 
@@ -842,9 +844,9 @@ function App() {
       await generateGeminiResponse(geminiApiKey, 'Respond with the word: OK');
       setGeminiTestStatus('✅ Connection successful!');
       localStorage.setItem('gemini_api_key', geminiApiKey);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setGeminiTestStatus(`❌ Error: ${err.message || err}`);
+      setGeminiTestStatus(`❌ Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -863,8 +865,8 @@ function App() {
       } else {
         setFirebaseTestStatus('❌ Connection failed. Check credentials/rules.');
       }
-    } catch (err: any) {
-      setFirebaseTestStatus(`❌ Error: ${err.message || err}`);
+    } catch (err) {
+      setFirebaseTestStatus(`❌ Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -881,9 +883,9 @@ function App() {
       playSuccessSound();
       setFirebaseSyncStatus(`✅ Successfully pushed ${memos.length} memories!`);
       setStatusText(`Pushed ${memos.length} memories to Firestore.`);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setFirebaseSyncStatus(`❌ Push failed: ${err.message || err}`);
+      setFirebaseSyncStatus(`❌ Push failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -915,9 +917,9 @@ function App() {
       setFirebaseSyncStatus(`✅ Synced! Imported ${importedCount} new memories.`);
       setStatusText(`Imported ${importedCount} memories from Firestore.`);
       loadHistory();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setFirebaseSyncStatus(`❌ Pull failed: ${err.message || err}`);
+      setFirebaseSyncStatus(`❌ Pull failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -951,9 +953,9 @@ function App() {
       playSuccessSound();
       setGoogleSheetsStatus('✅ Successfully exported all memories!');
       setStatusText('Exported memories to Google Sheet.');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setGoogleSheetsStatus(`❌ Export failed: ${err.message || err}`);
+      setGoogleSheetsStatus(`❌ Export failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
